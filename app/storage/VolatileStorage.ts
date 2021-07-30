@@ -2,11 +2,11 @@ import { AppStorage, AppStorageResult } from './AppStorageInterface';
 
 export class VolatileStorage implements AppStorage {
   private storage: { [key: string]: string };
-  initialize(): AppStorageResult {
+  async initialize(): Promise<AppStorageResult> {
     this.storage = {};
     return { ok: true };
   }
-  find(query: any): AppStorageResult {
+  async find(query: any): Promise<AppStorageResult> {
     const key = JSON.stringify(query);
     if (!this.storage[key]) {
       return {
@@ -19,17 +19,17 @@ export class VolatileStorage implements AppStorage {
       data: JSON.parse(this.storage[key]),
     };
   }
-  findAll(query: any): AppStorageResult {
+  async findAll(query: any): Promise<AppStorageResult> {
     throw new Error('Method not implemented.');
   }
-  update(query: any, data: any): AppStorageResult {
+  async update(query: any, data: any): Promise<AppStorageResult> {
     const key = JSON.stringify(query);
     const data_str = JSON.stringify(query);
     const _ = JSON.parse(data_str); // It may throw error.
     this.storage[key] = data_str;
     return { ok: true };
   }
-  erase(query: any): AppStorageResult {
+  async erase(query: any): Promise<AppStorageResult> {
     const key = JSON.stringify(query);
     delete this.storage[key];
     return { ok: true };

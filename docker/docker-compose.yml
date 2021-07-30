@@ -1,0 +1,35 @@
+version: '1'
+
+services:
+  app:
+    # build:
+    #   context: .
+    #   dockerfile: ./Dockerfile
+    image: node:14-alpine
+    ports:
+      - 127.0.0.1:18010:3000    # localhost only
+    links:
+      - mongo:mongo
+    depends_on:
+      - mongo
+    environment:
+    command: "dockerize
+              -wait tcp://mongo:27017
+              -wait tcp://elasticsearch:9200
+              -timeout 60s
+              npm run server:prod"
+    restart: unless-stopped
+
+    volumes:
+
+  mongo:
+    image: mongo:4.4
+    restart: unless-stopped
+    volumes:
+      - mongo_configdb:/data/configdb
+      - mongo_db:/data/db
+
+
+volumes:
+  mongo_configdb:
+  mongo_db:

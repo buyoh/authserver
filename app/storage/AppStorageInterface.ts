@@ -16,7 +16,7 @@ interface AppStorageResultForbidden {
 interface AppStorageResultUnexpected {
   ok: false;
   result: 'error';
-  detail: string | undefined;
+  detail?: string;
 }
 
 export type AppStorageResult =
@@ -26,9 +26,9 @@ export type AppStorageResult =
   | AppStorageResultUnexpected;
 
 export interface AppStorage {
-  initialize(): AppStorageResult;
-  find(query: any): AppStorageResult;
-  findAll(query: any): AppStorageResult;
-  update(query: any, data: any): AppStorageResult;
-  erase(query: any): AppStorageResult;
+  initialize(): Promise<AppStorageResult>;
+  find(query: any): Promise<AppStorageResult>;
+  findAll(query: any): Promise<AppStorageResult>;
+  update(data: any): Promise<AppStorageResult>;
+  erase(query: any): Promise<AppStorageResult>;
 }

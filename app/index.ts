@@ -46,6 +46,8 @@ function loggedIn(session: any) {
   return session && (session as any).username;
 }
 
+// --------------------------
+
 app.get('/auth/login', (req, res) => {
   if (loggedIn(req.session)) {
     res.sendFile(__dirname + '/html/loggedin.html');
@@ -53,6 +55,8 @@ app.get('/auth/login', (req, res) => {
     res.sendFile(__dirname + '/html/login.html');
   }
 });
+
+// --------------------------
 
 app.get('/', (req, res) => {
   // check the session.
@@ -77,10 +81,11 @@ app.get('/auth', (req, res) => {
   }
 });
 
+// --------------------------
+
 app.post('/auth/login', (req, res) => {
   const username = req.body.user;
   const otppass = req.body.pass;
-  console.log(username, otppass);
   if (!username || !otppass) {
     res.status(403);
     res.json({ ok: false });
@@ -88,7 +93,6 @@ app.post('/auth/login', (req, res) => {
   }
   if (userManager.testUser(username, otppass)) {
     req.session.regenerate((err) => {
-      console.log('ok', username);
       (req.session as any).username = username;
       res.redirect('/auth/login'); // GET /auth/login
     });
@@ -102,6 +106,43 @@ app.post('/auth/logout', (req, res) => {
     res.redirect('/auth/login'); // GET /auth/logout
   });
 });
+
+// --------------------------
+
+app.get('/auth/api/user', (req, res) => {
+  if (!loggedIn(req.session)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  res.status(200);
+  res.json({ ok: true });
+  // TODO:
+});
+
+app.post('/auth/api/user', (req, res) => {
+  if (!loggedIn(req.session)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  // TODO:
+  res.status(200);
+  res.json({ ok: true });
+});
+
+app.delete('/auth/api/user', (req, res) => {
+  if (!loggedIn(req.session)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  // TODO:
+  res.status(204);
+  res.json({ ok: true });
+});
+
+// --------------------------
 
 app.listen('8888', () => {
   console.log('listen...');
