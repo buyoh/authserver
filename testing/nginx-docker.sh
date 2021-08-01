@@ -9,5 +9,3 @@ docker run --name my-nginx-docker --rm \
   -v $PWD/nginx/nginx.conf:/etc/nginx/nginx.conf:ro \
   -v $PWD/nginx/conf.d:/etc/nginx/conf.d:ro \
   -d --net host nginx
-
-# --net host 

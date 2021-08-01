@@ -1,5 +1,6 @@
 import * as Express from 'express';
 import * as ExpressSession from 'express-session';
+import * as MongoStorage from './storage/MongoStorage';
 import { VolatileStorage } from './storage/VolatileStorage';
 import { UserProfileManager } from './user_profile/UserProfileManager';
 
@@ -34,17 +35,37 @@ app.use((req, res, next) => {
   next();
 });
 
-const passStorage = new VolatileStorage();
-passStorage.initialize();
-const userManager = new UserProfileManager(passStorage);
+// const passStorage = new VolatileStorage();
+// passStorage.initialize();
+// const userManager = new UserProfileManager(passStorage);
 
-// TODO: for testing
-// const otpurl = userManager.addUser('rootadmin');
-// console.log('pass:', otpurl);
+let userManager = null as UserProfileManager | null;
+
+(async () => {
+  await MongoStorage.connect();
+  try {
+    await MongoStorage.createCollection('authserver', 'user');
+  } catch (e) {
+    console.warn('Collection already exists?');
+    // Collection already exists
+  }
+
+  const passStorage = await new MongoStorage.MongoStorage('authserver', 'user');
+  await passStorage.initialize();
+  userManager = new UserProfileManager(passStorage);
+
+  const otpurl = await userManager.addUser('rootadmin');
+  if (otpurl === null) {
+    console.log('already initialized');
+  }
+  console.log('user: rootadmin,pass:', otpurl);
+})();
 
 function loggedIn(session: any) {
   return session && (session as any).username;
 }
+
+// --------------------------
 
 app.get('/auth/login', (req, res) => {
   if (loggedIn(req.session)) {
@@ -53,6 +74,8 @@ app.get('/auth/login', (req, res) => {
     res.sendFile(__dirname + '/html/login.html');
   }
 });
+
+// --------------------------
 
 app.get('/', (req, res) => {
   // check the session.
@@ -77,24 +100,31 @@ app.get('/auth', (req, res) => {
   }
 });
 
+// --------------------------
+
 app.post('/auth/login', (req, res) => {
   const username = req.body.user;
   const otppass = req.body.pass;
-  console.log(username, otppass);
+  if (!userManager) {
+    res.status(500);
+    res.json({ ok: false });
+    return false;
+  }
   if (!username || !otppass) {
     res.status(403);
     res.json({ ok: false });
     return false;
   }
-  if (userManager.testUser(username, otppass)) {
-    req.session.regenerate((err) => {
-      console.log('ok', username);
-      (req.session as any).username = username;
+  (async () => {
+    if (await userManager.testUser(username, otppass)) {
+      req.session.regenerate((err) => {
+        (req.session as any).username = username;
+        res.redirect('/auth/login'); // GET /auth/login
+      });
+    } else {
       res.redirect('/auth/login'); // GET /auth/login
-    });
-  } else {
-    res.redirect('/auth/login'); // GET /auth/login
-  }
+    }
+  })();
 });
 
 app.post('/auth/logout', (req, res) => {
@@ -102,6 +132,43 @@ app.post('/auth/logout', (req, res) => {
     res.redirect('/auth/login'); // GET /auth/logout
   });
 });
+
+// --------------------------
+
+app.get('/auth/api/user', (req, res) => {
+  if (!loggedIn(req.session)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  res.status(200);
+  res.json({ ok: true });
+  // TODO:
+});
+
+app.post('/auth/api/user', (req, res) => {
+  if (!loggedIn(req.session)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  // TODO:
+  res.status(200);
+  res.json({ ok: true });
+});
+
+app.delete('/auth/api/user', (req, res) => {
+  if (!loggedIn(req.session)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  // TODO:
+  res.status(204);
+  res.json({ ok: true });
+});
+
+// --------------------------
 
 app.listen('8888', () => {
   console.log('listen...');

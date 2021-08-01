@@ -1,13 +1,15 @@
-import { AppStorage, AppStorageResult } from './AppStorageInterface';
+import {
+  KeyValueStorage,
+  KeyValueStorageResult,
+} from './KeyValueStorageInterface';
 
-export class VolatileStorage implements AppStorage {
+export class VolatileStorage implements KeyValueStorage {
   private storage: { [key: string]: string };
-  initialize(): AppStorageResult {
+  async initialize(): Promise<KeyValueStorageResult> {
     this.storage = {};
     return { ok: true };
   }
-  find(query: any): AppStorageResult {
-    const key = JSON.stringify(query);
+  async get(key: string): Promise<KeyValueStorageResult> {
     if (!this.storage[key]) {
       return {
         ok: false,
@@ -19,17 +21,24 @@ export class VolatileStorage implements AppStorage {
       data: JSON.parse(this.storage[key]),
     };
   }
-  findAll(query: any): AppStorageResult {
-    throw new Error('Method not implemented.');
+  async insert(key: string, data: any): Promise<KeyValueStorageResult> {
+    if (this.storage[key]) {
+      return { ok: false, result: 'invalid' };
+    }
+    const data_str = JSON.stringify(data);
+    this.storage[key] = data_str;
+    return { ok: true };
   }
-  update(query: any, data: any): AppStorageResult {
-    const key = JSON.stringify(query);
-    const data_str = JSON.stringify(query);
+  async update(key: string, data: any): Promise<KeyValueStorageResult> {
+    if (!this.storage[key]) {
+      return { ok: false, result: 'invalid' };
+    }
+    const data_str = JSON.stringify(data);
     const _ = JSON.parse(data_str); // It may throw error.
     this.storage[key] = data_str;
     return { ok: true };
   }
-  erase(query: any): AppStorageResult {
+  async erase(query: any): Promise<KeyValueStorageResult> {
     const key = JSON.stringify(query);
     delete this.storage[key];
     return { ok: true };
