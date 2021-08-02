@@ -91,27 +91,6 @@ async function initializeUserManager(): Promise<void> {
 
 // --------------------------
 
-app.get('/auth/login', (req, res) => {
-  if (loggedIn(req.session)) {
-    res.sendFile(__dirname + '/html/loggedin.html');
-  } else {
-    res.sendFile(__dirname + '/html/login.html');
-  }
-});
-
-// --------------------------
-
-app.get('/', (req, res) => {
-  // check the session.
-  if (loggedIn(req.session)) {
-    res.status(200);
-    res.json({ ok: true });
-  } else {
-    res.status(403); // for bidden
-    res.json({ ok: false });
-  }
-});
-
 app.get('/auth', (req, res) => {
   // check the session.
   // bodyless response
@@ -126,8 +105,29 @@ app.get('/auth', (req, res) => {
 
 // --------------------------
 
+app.get('/auth-portal/login', (req, res) => {
+  if (loggedIn(req.session)) {
+    res.sendFile(__dirname + '/html/loggedin.html');
+  } else {
+    res.sendFile(__dirname + '/html/login.html');
+  }
+});
+
+app.get('/auth-portal', (req, res) => {
+  // check the session.
+  if (loggedIn(req.session)) {
+    res.status(200);
+    res.json({ ok: true });
+  } else {
+    res.status(403); // for bidden
+    res.json({ ok: false });
+  }
+});
+
+// --------------------------
+
 // TODO: change URL
-app.post('/auth/login', (req, res) => {
+app.post('/auth-portal/login', (req, res) => {
   const username = req.body.user;
   const otppass = req.body.pass;
   if (!userManager) {
@@ -146,23 +146,23 @@ app.post('/auth/login', (req, res) => {
       req.session.regenerate((err) => {
         (req.session as any).username = username;
         (req.session as any).level = user.level;
-        res.redirect('/auth/login'); // GET /auth/login
+        res.redirect('/auth-portal/login'); // GET /auth-portal/login
       });
     } else {
-      res.redirect('/auth/login'); // GET /auth/login
+      res.redirect('/auth-portal/login'); // GET /auth-portal/login
     }
   })();
 });
 
-app.post('/auth/logout', (req, res) => {
+app.post('/auth-portal/logout', (req, res) => {
   req.session.destroy((err) => {
-    res.redirect('/auth/login'); // GET /auth/logout
+    res.redirect('/auth-portal/login'); // GET /auth-portal/logout
   });
 });
 
 // --------------------------
 
-app.get('/auth/api/user', (req, res) => {
+app.get('/auth-portal/user', (req, res) => {
   if (!loggedIn(req.session)) {
     res.status(403);
     res.json({ ok: false });
@@ -174,7 +174,7 @@ app.get('/auth/api/user', (req, res) => {
   // TODO: ...or returm self;
 });
 
-app.post('/auth/api/user', (req, res) => {
+app.post('/auth-portal/user', (req, res) => {
   if (!loggedIn(req.session)) {
     res.status(403);
     res.json({ ok: false });
@@ -208,7 +208,7 @@ app.post('/auth/api/user', (req, res) => {
     });
 });
 
-app.delete('/auth/api/user', (req, res) => {
+app.delete('/auth-portal/user', (req, res) => {
   if (!loggedIn(req.session)) {
     res.status(403);
     res.json({ ok: false });

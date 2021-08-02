@@ -13,12 +13,12 @@
     You are already logged in.
   </p>
   <hr>
-  <form action="/auth/logout" method="POST">
+  <form action="/auth-portal/logout" method="POST">
     <button type="submit">logout</button>
   </form>
   <hr>
   <p>add a new user account</p>
-  <form action="/auth/api/user" method="POST" onsubmit="handleEvent_adduser_submit(event)">
+  <form action="/auth-portal/api/user" method="POST" onsubmit="handleEvent_adduser_submit(event)">
     <input type="text" name="user" id="adduser_user" spellcheck="false" required="true" placeholder="username"
       minlength="2" autocomplete="off" autocapitalize="off">
     <button type="submit">adduser</button>
@@ -62,7 +62,7 @@
       });
     }
     // document.addEventListener('domcontentloaded', () => {
-    //   fetch('/auth/user', (res) => {
+    //   fetch('/auth-portal/user', (res) => {
     //     if (!res.ok) {
     //       console.warn('fetch failed', res.status);
     //       return;
