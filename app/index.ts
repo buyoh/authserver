@@ -1,8 +1,12 @@
 import * as Express from 'express';
 import * as ExpressSession from 'express-session';
 import * as MongoStorage from './storage/MongoStorage';
-import { VolatileStorage } from './storage/VolatileStorage';
-import { UserProfileManager } from './user_profile/UserProfileManager';
+import {
+  AuthLevel,
+  AuthLevelFull,
+  UserProfileManager,
+} from './user_profile/UserProfileManager';
+// import { VolatileStorage } from './storage/VolatileStorage';
 
 const app = Express();
 
@@ -35,13 +39,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// const passStorage = new VolatileStorage();
-// passStorage.initialize();
-// const userManager = new UserProfileManager(passStorage);
-
 let userManager = null as UserProfileManager | null;
 
-(async () => {
+// --------------------------
+
+function loggedIn(session: any): boolean {
+  return session && (session as any).username;
+}
+
+async function initializeUserManager(): Promise<void> {
   await MongoStorage.connect();
   try {
     await MongoStorage.createCollection('authserver', 'user');
@@ -54,16 +60,34 @@ let userManager = null as UserProfileManager | null;
   await passStorage.initialize();
   userManager = new UserProfileManager(passStorage);
 
-  const otpurl = await userManager.addUser('rootadmin');
-  if (otpurl === null) {
-    console.log('already initialized');
-  }
-  console.log('user: rootadmin,pass:', otpurl);
-})();
-
-function loggedIn(session: any) {
-  return session && (session as any).username;
+  // const passStorage = new VolatileStorage();
+  // passStorage.initialize();
+  // userManager = new UserProfileManager(passStorage);
 }
+
+// --------------------------
+
+(async () => {
+  await initializeUserManager();
+
+  if (!userManager) {
+    console.error('runtime error: initialize database');
+    process.exit(2);
+  }
+
+  if (process.env.ADMIN_USERNAME) {
+    const admin_username = process.env.ADMIN_USERNAME as string;
+    const otpurl = await userManager.addUser({
+      username: admin_username,
+      level: AuthLevelFull,
+    });
+    if (otpurl === null) {
+      console.log('already exists: ', admin_username);
+    } else {
+      console.log('user', admin_username, 'pass:', otpurl);
+    }
+  }
+})();
 
 // --------------------------
 
@@ -102,6 +126,7 @@ app.get('/auth', (req, res) => {
 
 // --------------------------
 
+// TODO: change URL
 app.post('/auth/login', (req, res) => {
   const username = req.body.user;
   const otppass = req.body.pass;
@@ -116,9 +141,11 @@ app.post('/auth/login', (req, res) => {
     return false;
   }
   (async () => {
-    if (await userManager.testUser(username, otppass)) {
+    const user = await userManager.testUser(username, otppass);
+    if (user && user.username === username) {
       req.session.regenerate((err) => {
         (req.session as any).username = username;
+        (req.session as any).level = user.level;
         res.redirect('/auth/login'); // GET /auth/login
       });
     } else {
@@ -142,8 +169,9 @@ app.get('/auth/api/user', (req, res) => {
     return;
   }
   res.status(200);
-  res.json({ ok: true });
-  // TODO:
+  res.json({ ok: false });
+  // TODO: return users;
+  // TODO: ...or returm self;
 });
 
 app.post('/auth/api/user', (req, res) => {
@@ -152,9 +180,32 @@ app.post('/auth/api/user', (req, res) => {
     res.json({ ok: false });
     return;
   }
-  // TODO:
-  res.status(200);
-  res.json({ ok: true });
+  // TODO: separate this logic to other file
+  const reqUsername = req.body.username;
+  const reqLevel = req.body.level - 0;
+  if (!((req.session as any).level < reqLevel)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  userManager
+    .addUser({ username: reqUsername, level: reqLevel as AuthLevel }) // TODO: validate
+    .then((res1) => {
+      if (!res1) {
+        res.status(400);
+        res.json({ ok: false });
+        return;
+      }
+      res.status(200);
+      res.json({
+        ok: true,
+        data: {
+          username: reqUsername,
+          level: reqLevel,
+          otpauth: res1,
+        },
+      });
+    });
 });
 
 app.delete('/auth/api/user', (req, res) => {
@@ -163,9 +214,9 @@ app.delete('/auth/api/user', (req, res) => {
     res.json({ ok: false });
     return;
   }
-  // TODO:
+  // TODO: delete user
   res.status(204);
-  res.json({ ok: true });
+  res.json({ ok: false });
 });
 
 // --------------------------

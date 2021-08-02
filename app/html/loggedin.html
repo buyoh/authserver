@@ -1,17 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
+
 <body>
   <p>
     You are already logged in.
   </p>
+  <hr>
   <form action="/auth/logout" method="POST">
     <button type="submit">logout</button>
   </form>
+  <hr>
+  <p>add a new user account</p>
+  <form action="/auth/api/user" method="POST" onsubmit="handleEvent_adduser_submit(event)">
+    <input type="text" name="user" id="adduser_user" spellcheck="false" required="true" placeholder="username"
+      minlength="2" autocomplete="off" autocapitalize="off">
+    <button type="submit">adduser</button>
+    <pre><output id="adduser_log"></output></pre>
+  </form>
+  <hr>
+  <p>user account list</p>
+  <div id="list">work in progress...</div>
+
+  <script>
+    function handleEvent_adduser_submit(event) {
+      // TODO: refactor
+      event.preventDefault();
+      const username = document.getElementById('adduser_user').value;
+      const level = 21;
+      const action = event.target.action;
+      const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+      };
+      const body = Object.entries({ username, level }).map((kv) => kv[0] + "=" + encodeURIComponent(kv[1])).join('&');
+      if (username.length < 3)
+        return;
+      fetch(action, { method: 'POST', body, headers }).then((res) => {
+
+        if (!res.ok) {
+          console.warn('fetch failed', res.status);
+          return;
+        }
+        res.json().then((json) => {
+          const { ok, data } = json;
+          if (!ok) {
+            console.warn('ng');
+            return;
+          }
+          const resUsername = data.username;
+          const resLevel = data.level;
+          const resOtpauth = data.otpauth;
+          // TODO: validate
+          document.getElementById('adduser_log').value = resOtpauth;
+        });
+      });
+    }
+    // document.addEventListener('domcontentloaded', () => {
+    //   fetch('/auth/user', (res) => {
+    //     if (!res.ok) {
+    //       console.warn('fetch failed', res.status);
+    //       return;
+    //     }
+    //     res.json().then((json) => {
+    //       const elem = document.createElement('li');
+    //       elem.appendChild(document.createTextNode('username'));
+    //       document.getElementById('list').append(elem);
+    //     });
+    //   });
+    // });
+  </script>
 </body>
+
 </html>
