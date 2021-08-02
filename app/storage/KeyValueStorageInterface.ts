@@ -3,6 +3,11 @@ interface KeyValueStorageResultOk {
   data?: any;
 }
 
+interface KeyValueStorageResultOkMany {
+  ok: true;
+  data: Array<{ key: string; data?: any }>;
+}
+
 interface KeyValueStorageResultNotFound {
   ok: false;
   result: 'notfound';
@@ -31,9 +36,21 @@ export type KeyValueStorageResult =
   | KeyValueStorageResultUnexpected
   | KeyValueStorageResultInvalid;
 
+export type KeyValueStorageResultMany =
+  | KeyValueStorageResultOkMany
+  | KeyValueStorageResultForbidden
+  | KeyValueStorageResultUnexpected
+  | KeyValueStorageResultInvalid;
+
+// ### purpose
+// - keyとデータが一対一対応するストレージのインターフェース
+// - 書き込みタイミング等の扱いは未考慮
+// - initializeは一度だけ呼び出す
+
 export interface KeyValueStorage {
   initialize(): Promise<KeyValueStorageResult>;
   get(key: string): Promise<KeyValueStorageResult>;
+  all(length?: number, offset?: number): Promise<KeyValueStorageResultMany>;
   insert(key: string, data: any): Promise<KeyValueStorageResult>;
   update(key: string, data: any): Promise<KeyValueStorageResult>;
   // upsert(key: string, data: any): Promise<KeyValueStorageResult>;

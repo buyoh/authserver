@@ -2,6 +2,7 @@ import { MongoClient, Collection, Document } from 'mongodb';
 import {
   KeyValueStorage,
   KeyValueStorageResult,
+  KeyValueStorageResultMany,
 } from './KeyValueStorageInterface';
 
 let mongodb = null as MongoClient | null;
@@ -59,7 +60,30 @@ export class MongoStorage implements KeyValueStorage {
     }
     return {
       ok: true,
-      data: doc,
+      data: doc.data,
+    };
+  }
+
+  async all(
+    length?: number,
+    offset?: number
+  ): Promise<KeyValueStorageResultMany> {
+    if (!this.collection) {
+      return { ok: false, result: 'error' };
+    }
+    const cursor = await this.collection.find(
+      {},
+      { skip: offset, limit: length }
+    );
+
+    const li = (await cursor.toArray()).map((e) => ({
+      key: e._id,
+      data: e.data,
+    }));
+
+    return {
+      ok: true,
+      data: li,
     };
   }
 
@@ -67,7 +91,7 @@ export class MongoStorage implements KeyValueStorage {
     if (!this.collection) {
       return { ok: false, result: 'error' };
     }
-    const res = await this.collection.insertOne({ _id: key, ...data });
+    const res = await this.collection.insertOne({ _id: key, data } as any);
     if (!res.acknowledged) {
       return { ok: false, result: 'invalid' };
     }

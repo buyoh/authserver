@@ -1,6 +1,7 @@
 import {
   KeyValueStorage,
   KeyValueStorageResult,
+  KeyValueStorageResultMany,
 } from './KeyValueStorageInterface';
 
 export class VolatileStorage implements KeyValueStorage {
@@ -19,6 +20,20 @@ export class VolatileStorage implements KeyValueStorage {
     return {
       ok: true,
       data: JSON.parse(this.storage[key]),
+    };
+  }
+  async all(
+    length?: number,
+    offset?: number
+  ): Promise<KeyValueStorageResultMany> {
+    if (offset === undefined) offset = 0;
+    if (length === undefined) length = Object.keys(this.storage).length;
+    const li = Object.entries(this.storage)
+      .slice(offset, offset + length)
+      .map((kv) => ({ key: kv[0], data: kv[1] }));
+    return {
+      ok: true,
+      data: li,
     };
   }
   async insert(key: string, data: any): Promise<KeyValueStorageResult> {

@@ -4,6 +4,13 @@ import * as crypto from 'crypto';
 
 //
 
+// ### purpose
+// - ユーザ情報を与えられたストレージへ保存・取得する
+// - secretを外部に出さない
+// - 鍵の照合を行う
+
+//
+
 export const AuthLevelMember = 21;
 export const AuthLevelFull = 1;
 
@@ -73,8 +80,27 @@ export class UserProfileManager {
     return secret.otpauth_url;
   }
 
-  async listUser(user: User): Promise<Array<User>> {
-    throw new Error('work in progress');
+  async getUser(username: string): Promise<User | null> {
+    if (!isValudUsername(username)) {
+      return null;
+    }
+    const res1 = await this.passStorage.get(username);
+    if (!res1.ok || !res1.data) {
+      return null;
+    }
+    return { username: res1.data.username, level: res1.data.level };
+  }
+
+  async allUsers(): Promise<Array<User>> {
+    const res = await this.passStorage.all();
+    if (!res.ok) {
+      // TODO: notify error
+      return [];
+    }
+    return res.data.map((raw) => ({
+      username: raw.data.username,
+      level: raw.data.level,
+    }));
   }
 
   async testUser(username: string, pass: string): Promise<null | User> {

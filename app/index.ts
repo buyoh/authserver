@@ -168,8 +168,17 @@ app.get('/auth-portal/user', (req, res) => {
     res.json({ ok: false });
     return;
   }
-  res.status(200);
-  res.json({ ok: false });
+
+  // TODO: test impl
+  userManager.allUsers().then((li) => {
+    if (!li) {
+      res.status(400);
+      res.json({ ok: false });
+      return;
+    }
+    res.status(200);
+    res.json({ ok: true, test: li });
+  });
   // TODO: return users;
   // TODO: ...or returm self;
 });
