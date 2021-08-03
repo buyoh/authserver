@@ -13,7 +13,7 @@ const app = Express();
 const sessionConfig = {
   secret: 'everythings_are_omochi',
   cookie: {
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7,
     // expires: Date,
     // `secure: false` is safe because it requires https but the requests receive through nginx.
     secure: false,
@@ -114,15 +114,7 @@ app.get('/auth-portal/login', (req, res) => {
 });
 
 app.get('/auth-portal', (req, res) => {
-  // check the session.
-  if (loggedIn(req.session)) {
-    res.status(200);
-    const { username, level } = req.session as any;
-    res.json({ ok: true, username, level });
-  } else {
-    res.status(401); // unauthorized
-    res.json({ ok: false });
-  }
+  res.redirect('/auth-portal/login');
 });
 
 // --------------------------
@@ -163,6 +155,17 @@ app.post('/auth-portal/logout', (req, res) => {
 
 // --------------------------
 
+app.get('/auth-portal/me', (req, res) => {
+  // check the session.
+  if (!loggedIn(req.session)) {
+    res.status(401); // unauthorized
+    res.json({ ok: false });
+  } else {
+    res.status(200);
+    const { username, level } = req.session as any;
+    res.json({ ok: true, username, level });
+  }
+});
 app.get('/auth-portal/user/:username', (req, res) => {
   const { username } = req.params;
   if (!loggedIn(req.session)) {
