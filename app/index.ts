@@ -98,7 +98,7 @@ app.get('/auth', (req, res) => {
     res.status(204); // no content
     res.json({ ok: true });
   } else {
-    res.status(403); // for bidden
+    res.status(403); // forbidden TODO: 401 unauthorized
     res.json({ ok: false });
   }
 });
@@ -117,9 +117,10 @@ app.get('/auth-portal', (req, res) => {
   // check the session.
   if (loggedIn(req.session)) {
     res.status(200);
-    res.json({ ok: true });
+    const { username, level } = req.session as any;
+    res.json({ ok: true, username, level });
   } else {
-    res.status(403); // for bidden
+    res.status(403); // forbidden
     res.json({ ok: false });
   }
 });
@@ -162,25 +163,54 @@ app.post('/auth-portal/logout', (req, res) => {
 
 // --------------------------
 
-app.get('/auth-portal/user', (req, res) => {
+app.get('/auth-portal/user/:username', (req, res) => {
+  const { username } = req.params;
   if (!loggedIn(req.session)) {
     res.status(403);
     res.json({ ok: false });
     return;
   }
 
-  // TODO: test impl
-  userManager.allUsers().then((li) => {
+  (async () => {
+    const user = await userManager.getUser(username);
+    if (!user) {
+      res.status(400);
+      res.json({ ok: false });
+      return;
+    }
+    res.status(200);
+    res.json({
+      ok: true,
+      data: { username: user.username, level: user.level },
+    });
+    return;
+  })();
+});
+
+app.get('/auth-portal/user', (req, res) => {
+  if (!loggedIn(req.session)) {
+    res.status(403);
+    res.json({ ok: false });
+    return;
+  }
+  const myUsername = (req.session as any).username;
+  (async () => {
+    const li = await userManager.allUsers();
     if (!li) {
       res.status(400);
       res.json({ ok: false });
       return;
     }
     res.status(200);
-    res.json({ ok: true, test: li });
-  });
-  // TODO: return users;
-  // TODO: ...or returm self;
+    res.json({
+      ok: true,
+      data: li.map((e) => ({
+        username: e.username,
+        level: e.level,
+        me: e.username === myUsername,
+      })),
+    });
+  })();
 });
 
 app.post('/auth-portal/user', (req, res) => {
@@ -223,6 +253,22 @@ app.delete('/auth-portal/user', (req, res) => {
     res.json({ ok: false });
     return;
   }
+  // const username = req.body.username;
+
+  // async () => {
+  //   const user = await userManager.getUser(username);
+  //   if (!user) {
+  //     res.status(400);
+  //     res.json({ ok: false });
+  //     return;
+  //   }
+  //   const level = user.level;
+  //   if (!((req.session as any).level < level)) {
+  //     res.status(400);
+  //     res.json({ ok: false });
+  //     return;
+  //   }
+  // };
   // TODO: delete user
   res.status(204);
   res.json({ ok: false });

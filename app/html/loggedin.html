@@ -6,6 +6,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <style>
+    body {
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+  </style>
 </head>
 
 <body>
@@ -18,7 +23,7 @@
   </form>
   <hr>
   <p>add a new user account</p>
-  <form action="/auth-portal/api/user" method="POST" onsubmit="handleEvent_adduser_submit(event)">
+  <form action="/auth-portal/user" method="POST" onsubmit="handleEvent_adduser_submit(event)">
     <input type="text" name="user" id="adduser_user" spellcheck="false" required="true" placeholder="username"
       minlength="2" autocomplete="off" autocapitalize="off">
     <button type="submit">adduser</button>
@@ -26,7 +31,15 @@
   </form>
   <hr>
   <p>user account list</p>
-  <div id="list">work in progress...</div>
+  <div>
+    <table id="userlist_table" border="1">
+      <tr>
+        <th>username</th>
+        <th>auth-level</th>
+        <th></th>
+      </tr>
+    </table>
+  </div>
 
   <script>
     function handleEvent_adduser_submit(event) {
@@ -58,22 +71,41 @@
           const resOtpauth = data.otpauth;
           // TODO: validate
           document.getElementById('adduser_log').value = resOtpauth;
+          updateUserList();
         });
       });
     }
-    // document.addEventListener('domcontentloaded', () => {
-    //   fetch('/auth-portal/user', (res) => {
-    //     if (!res.ok) {
-    //       console.warn('fetch failed', res.status);
-    //       return;
-    //     }
-    //     res.json().then((json) => {
-    //       const elem = document.createElement('li');
-    //       elem.appendChild(document.createTextNode('username'));
-    //       document.getElementById('list').append(elem);
-    //     });
-    //   });
-    // });
+    async function updateUserList() {
+      const res = await fetch('/auth-portal/user');
+      if (!res.ok) {
+        console.warn('fetch failed', res.status);
+        return;
+      }
+      const json = await res.json();
+      if (!json.ok || (typeof json.data) != 'object') {
+        console.warn('data failed', json);
+        return;
+      }
+      document.querySelectorAll('#userlist_table .user').forEach(e => e.remove());
+      for (const user of json.data) {
+        const tdName = document.createElement('td');
+        const tdLevel = document.createElement('td');
+        const tdActs = document.createElement('td');
+        tdName.appendChild(document.createTextNode(user.username));
+        tdLevel.appendChild(document.createTextNode(user.level));
+        if (user.me)
+          tdActs.appendChild(document.createTextNode('[you]'));
+        else
+          tdActs.insertAdjacentHTML('beforeend', '<input type="button" value="delete" disabled>');
+        const tr = document.createElement('tr');
+        tr.classList.add('user');
+        tr.append(tdName, tdLevel, tdActs);
+        document.getElementById('userlist_table').append(tr);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      updateUserList();
+    });
   </script>
 </body>
 
