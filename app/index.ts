@@ -96,9 +96,9 @@ app.get('/auth', (req, res) => {
   // bodyless response
   if (loggedIn(req.session)) {
     res.status(204); // no content
-    res.json({ ok: true });
+    res.send();
   } else {
-    res.status(403); // forbidden TODO: 401 unauthorized
+    res.status(401); // unauthorized
     res.json({ ok: false });
   }
 });
@@ -120,7 +120,7 @@ app.get('/auth-portal', (req, res) => {
     const { username, level } = req.session as any;
     res.json({ ok: true, username, level });
   } else {
-    res.status(403); // forbidden
+    res.status(401); // unauthorized
     res.json({ ok: false });
   }
 });
@@ -137,7 +137,7 @@ app.post('/auth-portal/login', (req, res) => {
     return false;
   }
   if (!username || !otppass) {
-    res.status(403);
+    res.status(400);
     res.json({ ok: false });
     return false;
   }
@@ -166,7 +166,7 @@ app.post('/auth-portal/logout', (req, res) => {
 app.get('/auth-portal/user/:username', (req, res) => {
   const { username } = req.params;
   if (!loggedIn(req.session)) {
-    res.status(403);
+    res.status(401); // unauthorized
     res.json({ ok: false });
     return;
   }
@@ -189,7 +189,7 @@ app.get('/auth-portal/user/:username', (req, res) => {
 
 app.get('/auth-portal/user', (req, res) => {
   if (!loggedIn(req.session)) {
-    res.status(403);
+    res.status(401); // unauthorized
     res.json({ ok: false });
     return;
   }
@@ -215,7 +215,7 @@ app.get('/auth-portal/user', (req, res) => {
 
 app.post('/auth-portal/user', (req, res) => {
   if (!loggedIn(req.session)) {
-    res.status(403);
+    res.status(401); // unauthorized
     res.json({ ok: false });
     return;
   }
@@ -250,7 +250,7 @@ app.post('/auth-portal/user', (req, res) => {
 app.delete('/auth-portal/user/:username', (req, res) => {
   const { username } = req.params;
   if (!loggedIn(req.session)) {
-    res.status(403);
+    res.status(401); // unauthorized
     res.json({ ok: false });
     return;
   }
@@ -263,7 +263,7 @@ app.delete('/auth-portal/user/:username', (req, res) => {
     }
     const level = user.level;
     if (!((req.session as any).level < level)) {
-      res.status(400);
+      res.status(403);
       res.json({ ok: false });
       return;
     }
