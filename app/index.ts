@@ -247,31 +247,35 @@ app.post('/auth-portal/user', (req, res) => {
     });
 });
 
-app.delete('/auth-portal/user', (req, res) => {
+app.delete('/auth-portal/user/:username', (req, res) => {
+  const { username } = req.params;
   if (!loggedIn(req.session)) {
     res.status(403);
     res.json({ ok: false });
     return;
   }
-  // const username = req.body.username;
-
-  // async () => {
-  //   const user = await userManager.getUser(username);
-  //   if (!user) {
-  //     res.status(400);
-  //     res.json({ ok: false });
-  //     return;
-  //   }
-  //   const level = user.level;
-  //   if (!((req.session as any).level < level)) {
-  //     res.status(400);
-  //     res.json({ ok: false });
-  //     return;
-  //   }
-  // };
-  // TODO: delete user
-  res.status(204);
-  res.json({ ok: false });
+  (async () => {
+    const user = await userManager.getUser(username);
+    if (!user) {
+      res.status(400);
+      res.json({ ok: false });
+      return;
+    }
+    const level = user.level;
+    if (!((req.session as any).level < level)) {
+      res.status(400);
+      res.json({ ok: false });
+      return;
+    }
+    const res1 = await userManager.deleteUser(username);
+    if (!res1) {
+      res.status(500);
+      res.json({ ok: false });
+      return;
+    }
+    res.status(204);
+    res.send();
+  })();
 });
 
 // --------------------------

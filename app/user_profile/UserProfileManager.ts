@@ -142,7 +142,14 @@ export class UserProfileManager {
     };
   }
 
-  async deleteUser() {
-    throw new Error('work in progress');
+  async deleteUser(username: string): Promise<true | null> {
+    if (!isValudUsername(username)) {
+      return null;
+    }
+    const res1 = await this.passStorage.erase(username);
+    if (!res1.ok) {
+      return null;
+    }
+    return true;
   }
 }

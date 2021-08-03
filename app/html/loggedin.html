@@ -23,7 +23,7 @@
   </form>
   <hr>
   <p>add a new user account</p>
-  <form action="/auth-portal/user" method="POST" onsubmit="handleEvent_adduser_submit(event)">
+  <form method="POST" onsubmit="handleEvent_adduser_submit(event)">
     <input type="text" name="user" id="adduser_user" spellcheck="false" required="true" placeholder="username"
       minlength="2" autocomplete="off" autocapitalize="off">
     <button type="submit">adduser</button>
@@ -42,39 +42,50 @@
   </div>
 
   <script>
-    function handleEvent_adduser_submit(event) {
-      // TODO: refactor
-      event.preventDefault();
-      const username = document.getElementById('adduser_user').value;
-      const level = 21;
-      const action = event.target.action;
+    function myfetch(uri, method, json) {
       const headers = {
         'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
       };
-      const body = Object.entries({ username, level }).map((kv) => kv[0] + "=" + encodeURIComponent(kv[1])).join('&');
+      const body = Object.entries(json).map((kv) =>
+        kv[0] + "=" + encodeURIComponent(kv[1])).join('&');
+      return fetch(uri, { method, body, headers });
+    }
+
+    function handleEvent_adduser_submit(event) {
+      event.preventDefault();
+      const username = document.getElementById('adduser_user').value;
+      const level = 21;
       if (username.length < 3)
         return;
-      fetch(action, { method: 'POST', body, headers }).then((res) => {
-
+      myfetch('/auth-portal/user', 'POST', { username, level }).then(async (res) => {
         if (!res.ok) {
           console.warn('fetch failed', res.status);
           return;
         }
-        res.json().then((json) => {
-          const { ok, data } = json;
-          if (!ok) {
-            console.warn('ng');
-            return;
-          }
-          const resUsername = data.username;
-          const resLevel = data.level;
-          const resOtpauth = data.otpauth;
-          // TODO: validate
-          document.getElementById('adduser_log').value = resOtpauth;
-          updateUserList();
-        });
+        const { ok, data } = await res.json();
+        if (!ok) {
+          console.warn('ng');
+          return;
+        }
+        const resUsername = data.username;
+        const resLevel = data.level;
+        const resOtpauth = data.otpauth;
+        // TODO: validate
+        document.getElementById('adduser_log').value = resOtpauth;
+        updateUserList();
       });
     }
+
+    async function deleteUser(username) {
+      myfetch('/auth-portal/user/' + username, 'DELETE', {}).then((res) => {
+        if (!res.ok) {
+          console.warn('fetch failed', res.status);
+          return;
+        }
+        updateUserList();
+      });
+    }
+
     async function updateUserList() {
       const res = await fetch('/auth-portal/user');
       if (!res.ok) {
@@ -87,6 +98,7 @@
         return;
       }
       document.querySelectorAll('#userlist_table .user').forEach(e => e.remove());
+      const me = json.data.find(u => u.me);
       for (const user of json.data) {
         const tdName = document.createElement('td');
         const tdLevel = document.createElement('td');
@@ -95,8 +107,14 @@
         tdLevel.appendChild(document.createTextNode(user.level));
         if (user.me)
           tdActs.appendChild(document.createTextNode('[you]'));
-        else
-          tdActs.insertAdjacentHTML('beforeend', '<input type="button" value="delete" disabled>');
+        else {
+          const delbtn = document.createElement('input');
+          delbtn.value = 'delete';
+          delbtn.type = 'button';
+          // delbtn.disabled = true;
+          delbtn.addEventListener('click', () => { deleteUser(user.username); });
+          tdActs.appendChild(delbtn);
+        }
         const tr = document.createElement('tr');
         tr.classList.add('user');
         tr.append(tdName, tdLevel, tdActs);
