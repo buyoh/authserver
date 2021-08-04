@@ -1,3 +1,4 @@
+import { kResultNotFound, kResultInvalid } from '../base/error';
 import {
   KeyValueStorage,
   KeyValueStorageResult,
@@ -12,10 +13,7 @@ export class VolatileStorage implements KeyValueStorage {
   }
   async get(key: string): Promise<KeyValueStorageResult> {
     if (!this.storage[key]) {
-      return {
-        ok: false,
-        result: 'notfound',
-      };
+      return kResultNotFound;
     }
     return {
       ok: true,
@@ -38,7 +36,7 @@ export class VolatileStorage implements KeyValueStorage {
   }
   async insert(key: string, data: any): Promise<KeyValueStorageResult> {
     if (this.storage[key]) {
-      return { ok: false, result: 'invalid' };
+      return kResultInvalid;
     }
     const data_str = JSON.stringify(data);
     this.storage[key] = data_str;
@@ -46,7 +44,7 @@ export class VolatileStorage implements KeyValueStorage {
   }
   async update(key: string, data: any): Promise<KeyValueStorageResult> {
     if (!this.storage[key]) {
-      return { ok: false, result: 'invalid' };
+      return kResultInvalid;
     }
     const data_str = JSON.stringify(data);
     const _ = JSON.parse(data_str); // It may throw error.

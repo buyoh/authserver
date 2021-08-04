@@ -1,4 +1,5 @@
 import { MongoClient, Collection, Document } from 'mongodb';
+import { kResultInvalid, kResultNotFound } from '../base/error';
 import {
   KeyValueStorage,
   KeyValueStorageResult,
@@ -56,7 +57,7 @@ export class MongoStorage implements KeyValueStorage {
     }
     const doc = await this.collection.findOne({ _id: key });
     if (!doc) {
-      return { ok: false, result: 'notfound' };
+      return kResultNotFound;
     }
     return {
       ok: true,
@@ -93,7 +94,7 @@ export class MongoStorage implements KeyValueStorage {
     }
     const res = await this.collection.insertOne({ _id: key, data } as any);
     if (!res.acknowledged) {
-      return { ok: false, result: 'invalid' };
+      return kResultInvalid;
     }
     // res.insertedId
     return { ok: true };
@@ -109,10 +110,10 @@ export class MongoStorage implements KeyValueStorage {
       { upsert: false }
     );
     if (!res.acknowledged) {
-      return { ok: false, result: 'invalid' };
+      return kResultInvalid;
     }
     if (res.matchedCount == 0) {
-      return { ok: false, result: 'notfound' };
+      return kResultNotFound;
     }
     return { ok: true };
   }
@@ -122,10 +123,10 @@ export class MongoStorage implements KeyValueStorage {
     }
     const res = await this.collection.deleteOne({ _id: key });
     if (!res.acknowledged) {
-      return { ok: false, result: 'invalid' };
+      return kResultInvalid;
     }
     if (res.deletedCount == 0) {
-      return { ok: false, result: 'notfound' };
+      return kResultNotFound;
     }
     return { ok: true };
   }

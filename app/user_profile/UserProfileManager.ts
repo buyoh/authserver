@@ -1,6 +1,13 @@
 import { KeyValueStorage } from '../storage/KeyValueStorageInterface';
 import * as Speakeasy from 'speakeasy'; // TODO: replace this module. not maintained
 import * as crypto from 'crypto';
+import { convertToAuthLevel, User } from './UserProfile';
+import {
+  ResultOk,
+  kResultInvalid,
+  ResultErrors,
+  kResultNotFound,
+} from '../base/error';
 
 //
 
@@ -8,31 +15,6 @@ import * as crypto from 'crypto';
 // - ユーザ情報を与えられたストレージへ保存・取得する
 // - secretを外部に出さない
 // - 鍵の照合を行う
-
-//
-
-export const AuthLevelMember = 21;
-export const AuthLevelFull = 1;
-
-// TODO: hide
-export type AuthLevel = typeof AuthLevelFull | typeof AuthLevelMember;
-
-export interface User {
-  username: string;
-  level: AuthLevel;
-  // no secret
-}
-
-function convertToAuthLevel(maybeLevel: any): null | AuthLevel {
-  // nanikore format...
-  return typeof maybeLevel != 'number'
-    ? null
-    : maybeLevel == AuthLevelFull
-    ? AuthLevelFull
-    : maybeLevel == AuthLevelMember
-    ? AuthLevelMember
-    : null;
-}
 
 //
 
@@ -52,17 +34,20 @@ export class UserProfileManager {
     this.passStorage = passStorage;
   }
 
-  async addUser(user: User): Promise<null | string> {
+  async addUser(
+    user: User
+  ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors> {
     // TODO: return User
     // TODO: check valid user level
     const { username, level } = user;
     if (!isValudUsername(username)) {
       console.log('invalid username');
-      return null;
+      return kResultInvalid;
     }
     const res1 = await this.passStorage.get(username);
     if (res1.ok) {
-      return null; // TODO: define type
+      // already exists
+      return kResultInvalid;
     }
     const secret = Speakeasy.generateSecret({
       length: 32,
@@ -75,55 +60,55 @@ export class UserProfileManager {
       level,
     });
     if (!res2.ok) {
-      return null;
+      throw new Error('unexpected error: insert failed');
     }
-    return secret.otpauth_url;
+    return { ok: true, otpauth_url: secret.otpauth_url };
   }
 
-  async getUser(username: string): Promise<User | null> {
+  async getUser(username: string): Promise<(ResultOk & User) | ResultErrors> {
     if (!isValudUsername(username)) {
-      return null;
+      return kResultInvalid;
     }
     const res1 = await this.passStorage.get(username);
     if (!res1.ok || !res1.data) {
-      return null;
+      return kResultNotFound;
     }
-    return { username: res1.data.username, level: res1.data.level };
+    return { ok: true, username: res1.data.username, level: res1.data.level };
   }
 
-  async allUsers(): Promise<Array<User>> {
+  async allUsers(): Promise<(ResultOk & { data: Array<User> }) | ResultErrors> {
     const res = await this.passStorage.all();
     if (!res.ok) {
-      // TODO: notify error
-      return [];
+      throw new Error('unexpected error: ');
     }
-    return res.data.map((raw) => ({
+    const li = res.data.map((raw) => ({
       username: raw.data.username,
       level: raw.data.level,
     }));
+    return { ok: true, data: li };
   }
 
-  async testUser(username: string, pass: string): Promise<null | User> {
+  async testUser(
+    username: string,
+    pass: string
+  ): Promise<(ResultOk & User) | ResultErrors> {
     if (!isValudUsername(username) || !isValidPassword(pass)) {
-      return null;
+      return kResultInvalid;
     }
     const res1 = await this.passStorage.get(username);
     if (!res1.ok || !res1.data) {
-      return null;
+      return kResultInvalid;
     }
     const resUsername = res1.data.username;
     const resSecret = res1.data.secret;
     const resLevel = res1.data.level;
 
     if (typeof resUsername != 'string' || resUsername != username) {
-      return null;
+      return kResultInvalid;
     }
     const level = convertToAuthLevel(resLevel);
-    if (level === null) {
-      return null;
-    }
-    if (!resSecret) {
-      return null;
+    if (level === null || !resSecret) {
+      throw new Error('unexpected error: ');
     }
     const secretBase32 = resSecret as string;
 
@@ -133,23 +118,23 @@ export class UserProfileManager {
       token: pass,
     });
     if (!res3) {
-      // invalid;
-      return null;
+      return kResultInvalid;
     }
     return {
+      ok: true,
       username: resUsername,
       level,
     };
   }
 
-  async deleteUser(username: string): Promise<true | null> {
+  async deleteUser(username: string): Promise<ResultOk | ResultErrors> {
     if (!isValudUsername(username)) {
-      return null;
+      return kResultInvalid;
     }
     const res1 = await this.passStorage.erase(username);
     if (!res1.ok) {
-      return null;
+      throw new Error('unexpected error: ');
     }
-    return true;
+    return { ok: true };
   }
 }

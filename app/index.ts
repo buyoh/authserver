@@ -1,11 +1,8 @@
 import * as Express from 'express';
 import * as ExpressSession from 'express-session';
 import * as MongoStorage from './storage/MongoStorage';
-import {
-  AuthLevel,
-  AuthLevelFull,
-  UserProfileManager,
-} from './user_profile/UserProfileManager';
+import { AuthLevelAdmin, AuthLevel } from './user_profile/UserProfile';
+import { UserProfileManager } from './user_profile/UserProfileManager';
 // import { VolatileStorage } from './storage/VolatileStorage';
 
 const app = Express();
@@ -77,14 +74,14 @@ async function initializeUserManager(): Promise<void> {
 
   if (process.env.ADMIN_USERNAME) {
     const admin_username = process.env.ADMIN_USERNAME as string;
-    const otpurl = await userManager.addUser({
+    const res1 = await userManager.addUser({
       username: admin_username,
-      level: AuthLevelFull,
+      level: AuthLevelAdmin,
     });
-    if (otpurl === null) {
+    if (!res1.ok) {
       console.log('already exists: ', admin_username);
     } else {
-      console.log('user', admin_username, 'pass:', otpurl);
+      console.log('user', admin_username, 'pass:', res1.otpauth_url);
     }
   }
 })();
@@ -119,7 +116,7 @@ app.get('/auth-portal', (req, res) => {
 
 // --------------------------
 
-// TODO: change URL
+// TODO: 試行回数の記録
 app.post('/auth-portal/login', (req, res) => {
   const username = req.body.user;
   const otppass = req.body.pass;
@@ -134,8 +131,9 @@ app.post('/auth-portal/login', (req, res) => {
     return false;
   }
   (async () => {
+    // TODO: catch error;
     const user = await userManager.testUser(username, otppass);
-    if (user && user.username === username) {
+    if (user.ok && user.username === username) {
       req.session.regenerate((err) => {
         (req.session as any).username = username;
         (req.session as any).level = user.level;
@@ -176,7 +174,7 @@ app.get('/auth-portal/user/:username', (req, res) => {
 
   (async () => {
     const user = await userManager.getUser(username);
-    if (!user) {
+    if (!user.ok) {
       res.status(400);
       res.json({ ok: false });
       return;
@@ -198,8 +196,8 @@ app.get('/auth-portal/user', (req, res) => {
   }
   const myUsername = (req.session as any).username;
   (async () => {
-    const li = await userManager.allUsers();
-    if (!li) {
+    const res1 = await userManager.allUsers();
+    if (!res1.ok) {
       res.status(400);
       res.json({ ok: false });
       return;
@@ -207,7 +205,7 @@ app.get('/auth-portal/user', (req, res) => {
     res.status(200);
     res.json({
       ok: true,
-      data: li.map((e) => ({
+      data: res1.data.map((e) => ({
         username: e.username,
         level: e.level,
         me: e.username === myUsername,
@@ -233,7 +231,7 @@ app.post('/auth-portal/user', (req, res) => {
   userManager
     .addUser({ username: reqUsername, level: reqLevel as AuthLevel }) // TODO: validate
     .then((res1) => {
-      if (!res1) {
+      if (!res1.ok) {
         res.status(400);
         res.json({ ok: false });
         return;
@@ -244,7 +242,7 @@ app.post('/auth-portal/user', (req, res) => {
         data: {
           username: reqUsername,
           level: reqLevel,
-          otpauth: res1,
+          otpauth: res1.otpauth_url,
         },
       });
     });
@@ -259,7 +257,7 @@ app.delete('/auth-portal/user/:username', (req, res) => {
   }
   (async () => {
     const user = await userManager.getUser(username);
-    if (!user) {
+    if (!user.ok) {
       res.status(400);
       res.json({ ok: false });
       return;

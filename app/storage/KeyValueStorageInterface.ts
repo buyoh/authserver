@@ -1,3 +1,5 @@
+import { ResultErrors } from '../base/error';
+
 interface KeyValueStorageResultOk {
   ok: true;
   data?: any;
@@ -8,39 +10,11 @@ interface KeyValueStorageResultOkMany {
   data: Array<{ key: string; data?: any }>;
 }
 
-interface KeyValueStorageResultNotFound {
-  ok: false;
-  result: 'notfound';
-}
-
-interface KeyValueStorageResultForbidden {
-  ok: false;
-  result: 'forbidden';
-}
-
-interface KeyValueStorageResultInvalid {
-  ok: false;
-  result: 'invalid';
-}
-
-interface KeyValueStorageResultUnexpected {
-  ok: false;
-  result: 'error';
-  detail?: string;
-}
-
-export type KeyValueStorageResult =
-  | KeyValueStorageResultOk
-  | KeyValueStorageResultNotFound
-  | KeyValueStorageResultForbidden
-  | KeyValueStorageResultUnexpected
-  | KeyValueStorageResultInvalid;
+export type KeyValueStorageResult = KeyValueStorageResultOk | ResultErrors;
 
 export type KeyValueStorageResultMany =
   | KeyValueStorageResultOkMany
-  | KeyValueStorageResultForbidden
-  | KeyValueStorageResultUnexpected
-  | KeyValueStorageResultInvalid;
+  | ResultErrors;
 
 // ### purpose
 // - keyとデータが一対一対応するストレージのインターフェース
