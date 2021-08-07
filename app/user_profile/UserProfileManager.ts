@@ -1,6 +1,4 @@
 import { KeyValueStorage } from '../storage/KeyValueStorageInterface';
-import * as Speakeasy from 'speakeasy'; // TODO: replace this module. not maintained
-import * as crypto from 'crypto';
 import {
   convertToAuthLevel,
   isValidPassword,
@@ -13,6 +11,7 @@ import {
   ResultErrors,
   kResultNotFound,
 } from '../base/error';
+import { OtpAuthCrypto } from '../crypto/OtpAuthCrypto';
 
 //
 
@@ -25,8 +24,11 @@ import {
 
 export class UserProfileManager {
   passStorage: KeyValueStorage;
-  constructor(passStorage: KeyValueStorage) {
+  passCrypto: OtpAuthCrypto;
+  constructor(passStorage: KeyValueStorage, passCrypto: OtpAuthCrypto) {
+    // TODO: 抽象化 OtpAuthCrypto
     this.passStorage = passStorage;
+    this.passCrypto = passCrypto;
   }
 
   async addUser(
@@ -44,20 +46,17 @@ export class UserProfileManager {
       // already exists
       return kResultInvalid;
     }
-    const secret = Speakeasy.generateSecret({
-      length: 32,
-      name: crypto.randomUUID() + ':' + username,
-    });
+    const [passres, secret] = this.passCrypto.generateKey({ username });
 
     const res2 = await this.passStorage.insert(user.username, {
       username: user.username,
-      secret: secret.base32,
+      secret,
       level,
     });
     if (!res2.ok) {
       throw new Error('unexpected error: insert failed');
     }
-    return { ok: true, otpauth_url: secret.otpauth_url };
+    return { ok: true, otpauth_url: passres.otpauth_url };
   }
 
   async getUser(username: string): Promise<(ResultOk & User) | ResultErrors> {
@@ -105,13 +104,8 @@ export class UserProfileManager {
     if (level === null || !resSecret) {
       throw new Error('unexpected error: ');
     }
-    const secretBase32 = resSecret as string;
 
-    const res3 = Speakeasy.totp.verify({
-      secret: secretBase32,
-      encoding: 'base32',
-      token: pass,
-    });
+    const res3 = this.passCrypto.verify(pass, resSecret as string);
     if (!res3) {
       return kResultInvalid;
     }

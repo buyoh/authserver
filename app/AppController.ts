@@ -1,5 +1,6 @@
 import { AppExpress } from './AppExpress';
 import { AppHandler } from './AppHandler';
+import { OtpAuthCrypto } from './crypto/OtpAuthCrypto';
 import * as MongoStorage from './storage/MongoStorage';
 import { AuthLevelAdmin } from './user_profile/UserProfile';
 import { UserProfileManager } from './user_profile/UserProfileManager';
@@ -21,9 +22,11 @@ async function initializeUserManager(): Promise<UserProfileManager> {
     // Collection already exists
   }
 
+  const passCrypto = new OtpAuthCrypto();
+
   const passStorage = await new MongoStorage.MongoStorage('authserver', 'user');
   await passStorage.initialize();
-  return new UserProfileManager(passStorage);
+  return new UserProfileManager(passStorage, passCrypto);
 
   // const passStorage = new VolatileStorage();
   // passStorage.initialize();
