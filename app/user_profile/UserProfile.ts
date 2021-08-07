@@ -8,10 +8,12 @@
 
 export const AuthLevelNone = 99;
 export const AuthLevelMember = 21;
+export const AuthLevelManager = 11;
 export const AuthLevelAdmin = 1;
 
 export type AuthLevel =
   | typeof AuthLevelAdmin
+  | typeof AuthLevelManager
   | typeof AuthLevelMember
   | typeof AuthLevelNone;
 
@@ -33,5 +35,19 @@ export function convertToAuthLevel(maybeLevel: any): null | AuthLevel {
 }
 
 export function isEditableAuthLevel(me: AuthLevel, target: AuthLevel): boolean {
-  return me < target;
+  return me === AuthLevelAdmin && target === AuthLevelAdmin
+    ? true
+    : target === AuthLevelAdmin
+    ? false
+    : me <= target;
+}
+
+//
+
+export function isValudUsername(username: string) {
+  return /^[a-zA-Z0-9_-]{2,20}$/.test(username);
+}
+
+export function isValidPassword(password: string) {
+  return 5 <= password.length && password.length <= 200;
 }
