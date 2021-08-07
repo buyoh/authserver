@@ -1,7 +1,12 @@
 import { KeyValueStorage } from '../storage/KeyValueStorageInterface';
 import * as Speakeasy from 'speakeasy'; // TODO: replace this module. not maintained
 import * as crypto from 'crypto';
-import { convertToAuthLevel, User } from './UserProfile';
+import {
+  convertToAuthLevel,
+  isValidPassword,
+  isValudUsername,
+  User,
+} from './UserProfile';
 import {
   ResultOk,
   kResultInvalid,
@@ -15,16 +20,6 @@ import {
 // - ユーザ情報を与えられたストレージへ保存・取得する
 // - secretを外部に出さない
 // - 鍵の照合を行う
-
-//
-
-function isValudUsername(username: string) {
-  return /^[a-zA-Z0-9_-]{2,20}$/.test(username);
-}
-
-function isValidPassword(password: string) {
-  return 5 <= password.length && password.length <= 200;
-}
 
 //
 

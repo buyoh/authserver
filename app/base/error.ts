@@ -24,20 +24,15 @@ export const kResultForbidden: ResultForbidden = {
 export const kResultInvalid: ResultInvalid = { ok: false, result: 'invalid' };
 
 // note: The real unexpected errors should be thrown.
-export interface ResultUnexpected {
-  ok: false;
-  result: 'error';
-  detail?: string;
-}
+// export interface ResultUnexpected {
+//   ok: false;
+//   result: 'error';
+//   detail?: string;
+// }
 
 export type Result =
   | ResultOk
   | ResultNotFound
   | ResultForbidden
-  | ResultInvalid
-  | ResultUnexpected;
-export type ResultErrors =
-  | ResultNotFound
-  | ResultForbidden
-  | ResultInvalid
-  | ResultUnexpected;
+  | ResultInvalid;
+export type ResultErrors = ResultNotFound | ResultForbidden | ResultInvalid;

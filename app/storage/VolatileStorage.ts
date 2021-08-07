@@ -7,9 +7,8 @@ import {
 
 export class VolatileStorage implements KeyValueStorage {
   private storage: { [key: string]: string };
-  async initialize(): Promise<KeyValueStorageResult> {
+  async initialize(): Promise<void> {
     this.storage = {};
-    return { ok: true };
   }
   async get(key: string): Promise<KeyValueStorageResult> {
     if (!this.storage[key]) {

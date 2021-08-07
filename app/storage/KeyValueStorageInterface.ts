@@ -22,7 +22,7 @@ export type KeyValueStorageResultMany =
 // - initializeは一度だけ呼び出す
 
 export interface KeyValueStorage {
-  initialize(): Promise<KeyValueStorageResult>;
+  initialize(): Promise<void>;
   get(key: string): Promise<KeyValueStorageResult>;
   all(length?: number, offset?: number): Promise<KeyValueStorageResultMany>;
   insert(key: string, data: any): Promise<KeyValueStorageResult>;

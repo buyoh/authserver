@@ -35,8 +35,8 @@ export class MongoStorage implements KeyValueStorage {
     this.collection = null;
   }
 
-  async initialize(): Promise<KeyValueStorageResult> {
-    if (mongodb === null) return { ok: false, result: 'error' };
+  async initialize(): Promise<void> {
+    if (mongodb === null) throw new Error('mongodb is not initialized');
 
     // check whether the collection exists
     const db = mongodb.db(this.dbName);
@@ -53,7 +53,7 @@ export class MongoStorage implements KeyValueStorage {
 
   async get(key: string): Promise<KeyValueStorageResult> {
     if (!this.collection) {
-      return { ok: false, result: 'error' };
+      throw new Error('mongo storage is not initialized');
     }
     const doc = await this.collection.findOne({ _id: key });
     if (!doc) {
@@ -70,7 +70,7 @@ export class MongoStorage implements KeyValueStorage {
     offset?: number
   ): Promise<KeyValueStorageResultMany> {
     if (!this.collection) {
-      return { ok: false, result: 'error' };
+      throw new Error('mongo storage is not initialized');
     }
     const cursor = await this.collection.find(
       {},
@@ -90,7 +90,7 @@ export class MongoStorage implements KeyValueStorage {
 
   async insert(key: string, data: any): Promise<KeyValueStorageResult> {
     if (!this.collection) {
-      return { ok: false, result: 'error' };
+      throw new Error('mongo storage is not initialized');
     }
     const res = await this.collection.insertOne({ _id: key, data } as any);
     if (!res.acknowledged) {
@@ -102,7 +102,7 @@ export class MongoStorage implements KeyValueStorage {
 
   async update(key: string, data: any): Promise<KeyValueStorageResult> {
     if (!this.collection) {
-      return { ok: false, result: 'error' };
+      throw new Error('mongo storage is not initialized');
     }
     const res = await this.collection.updateOne(
       { _id: key },
@@ -119,7 +119,7 @@ export class MongoStorage implements KeyValueStorage {
   }
   async erase(key: string): Promise<KeyValueStorageResult> {
     if (!this.collection) {
-      return { ok: false, result: 'error' };
+      throw new Error('mongo storage is not initialized');
     }
     const res = await this.collection.deleteOne({ _id: key });
     if (!res.acknowledged) {
