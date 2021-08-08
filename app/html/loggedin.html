@@ -5,7 +5,9 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <link rel="stylesheet" href="/auth-portal/assets/style.css">
+  <script src="/auth-portal/assets/api.js"></script>
+  <title>user</title>
   <style>
     body {
       font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
@@ -14,112 +16,127 @@
 </head>
 
 <body>
-  <p>
-    You are already logged in.
-  </p>
-  <hr>
-  <form action="/auth-portal/logout" method="POST">
-    <button type="submit">logout</button>
-  </form>
-  <hr>
-  <p>add a new user account</p>
-  <form method="POST" onsubmit="handleEvent_adduser_submit(event)">
-    <input type="text" name="user" id="adduser_user" spellcheck="false" required="true" placeholder="username"
-      minlength="2" autocomplete="off" autocapitalize="off">
-    <button type="submit">adduser</button>
-    <pre><output id="adduser_log"></output></pre>
-  </form>
-  <hr>
-  <p>user account list</p>
-  <div>
-    <table id="userlist_table" border="1">
-      <tr>
-        <th>username</th>
-        <th>auth-level</th>
-        <th></th>
-      </tr>
-    </table>
+  <div class="pagewrapper">
+    <div class="content page ">
+      <h1>user page</h1>
+      <section>
+        <h2>Logout</h2>
+        <form onsubmit="handleEvent_logout(event)">
+          <button class="large special" type="submit">logout</button>
+        </form>
+      </section>
+      <section>
+        <h2>management accounts</h2>
+        <div>
+          <table id="userlist_table">
+            <tr>
+              <th>username</th>
+              <th>auth-level</th>
+              <th></th>
+            </tr>
+          </table>
+        </div>
+        <form id="form-accounts">
+          <div><output class="highlight" name="log"></output></div>
+        </form>
+      </section>
+      <section>
+        <h2>add a new user account</h2>
+        <form id="form-adduser" onsubmit="handleEvent_adduser_submit(event)">
+          <input type="text" name="user" spellcheck="false" required="true" placeholder="username" minlength="2"
+            autocomplete="off" autocapitalize="off">
+          <select name="level">
+            <option value="21" selected>member</option>
+            <option value="11">manager</option>
+          </select>
+          <button type="submit">adduser</button>
+          <pre><output class="highlight" name="log"></output></pre>
+        </form>
+      </section>
+    </div>
   </div>
 
   <script>
-    function myfetch(uri, method, json) {
-      const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-      };
-      const body = Object.entries(json).map((kv) =>
-        kv[0] + "=" + encodeURIComponent(kv[1])).join('&');
-      return fetch(uri, { method, body, headers });
+    async function handleEvent_logout(event) {
+      await fetchLogout();
+      location.reload();
     }
-
-    function handleEvent_adduser_submit(event) {
+    async function handleEvent_adduser_submit(event) {
       event.preventDefault();
-      const username = document.getElementById('adduser_user').value;
-      const level = 21;
+      const form = document.getElementById('form-adduser');
+      const username = form.user.value;
+      const level = parseInt(form.level.value);
       if (username.length < 3)
         return;
-      myfetch('/auth-portal/user', 'POST', { username, level }).then(async (res) => {
-        if (!res.ok) {
-          console.warn('fetch failed', res.status);
-          return;
-        }
-        const { ok, data } = await res.json();
-        if (!ok) {
-          console.warn('ng');
-          return;
-        }
-        const resUsername = data.username;
-        const resLevel = data.level;
-        const resOtpauth = data.otpauth;
-        // TODO: validate
-        document.getElementById('adduser_log').value = resOtpauth;
-        updateUserList();
-      });
-    }
-
-    async function deleteUser(username) {
-      myfetch('/auth-portal/user/' + username, 'DELETE', {}).then((res) => {
-        if (!res.ok) {
-          console.warn('fetch failed', res.status);
-          return;
-        }
-        updateUserList();
-      });
-    }
-
-    async function updateUserList() {
-      const res = await fetch('/auth-portal/user');
+      const res = await fetchAddUser(username, level);
       if (!res.ok) {
         console.warn('fetch failed', res.status);
         return;
       }
+      const { ok, data } = await res.json();
+      if (!ok) {
+        console.warn('ng');
+        return;
+      }
+      // const resUsername = data.username;
+      // const resLevel = data.level;
+      const resOtpauth = data.otpauth;
+      form.log.value = resOtpauth;
+      updateUserList();
+    }
+
+    async function deleteUser(username) {
+      const form = document.getElementById('form-accounts');
+      const res = await fetchDeleteUser(username);
+      if (!res.ok) {
+        form.log.value = 'fetch failed: ' + res.status;
+        console.warn('fetch failed', res.status);
+        return;
+      }
+      updateUserList();
+    }
+
+    function createUserRow(user, me) {
+      const tdName = document.createElement('td');
+      const tdLevel = document.createElement('td');
+      const tdActs = document.createElement('td');
+      tdName.appendChild(document.createTextNode(user.username));
+      tdLevel.appendChild(document.createTextNode(authLevelToString(user.level)));
+      if (user.me)
+        tdActs.appendChild(document.createTextNode('[you]'));
+      else {
+        const delbtn = document.createElement('input');
+        delbtn.value = 'delete';
+        delbtn.type = 'button';
+        delbtn.disabled = me.level !== 1 && user.level < me.level;
+        delbtn.addEventListener('click', () => { deleteUser(user.username); });
+        tdActs.appendChild(delbtn);
+      }
+      const tr = document.createElement('tr');
+      tr.classList.add('user');
+      tr.append(tdName, tdLevel, tdActs);
+      return tr;
+    }
+
+    async function updateUserList() {
+      const form = document.getElementById('form-accounts');
+      const res = await fetchGetAllUser();
+      if (!res.ok) {
+        form.log.value = 'fetch failed: ' + res.status;
+        return;
+      }
       const json = await res.json();
       if (!json.ok || (typeof json.data) != 'object') {
+        form.log.value = 'data invalid';
         console.warn('data failed', json);
         return;
       }
       document.querySelectorAll('#userlist_table .user').forEach(e => e.remove());
       const me = json.data.find(u => u.me);
       for (const user of json.data) {
-        const tdName = document.createElement('td');
-        const tdLevel = document.createElement('td');
-        const tdActs = document.createElement('td');
-        tdName.appendChild(document.createTextNode(user.username));
-        tdLevel.appendChild(document.createTextNode(user.level));
-        if (user.me)
-          tdActs.appendChild(document.createTextNode('[you]'));
-        else {
-          const delbtn = document.createElement('input');
-          delbtn.value = 'delete';
-          delbtn.type = 'button';
-          // delbtn.disabled = true;
-          delbtn.addEventListener('click', () => { deleteUser(user.username); });
-          tdActs.appendChild(delbtn);
-        }
-        const tr = document.createElement('tr');
-        tr.classList.add('user');
-        tr.append(tdName, tdLevel, tdActs);
-        document.getElementById('userlist_table').append(tr);
+        document.getElementById('userlist_table').append(createUserRow(user, me));
       }
+      form.log.value = 'updated.';
     }
     document.addEventListener('DOMContentLoaded', () => {
       updateUserList();

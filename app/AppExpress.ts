@@ -116,7 +116,8 @@ export class AppExpress {
 
     // --------------------------
 
-    app.get('/auth-portal/login', (req, res) => {
+    app.use('/auth-portal/assets', Express.static(__dirname + '/html/assets'));
+    app.get('/auth-portal/', (req, res) => {
       const session = extractUserSession(req.session);
       if (session.isLoggedIn()) {
         res.sendFile(__dirname + '/html/loggedin.html');
@@ -125,14 +126,10 @@ export class AppExpress {
       }
     });
 
-    app.get('/auth-portal', (req, res) => {
-      res.redirect('/auth-portal/login');
-    });
-
     // --------------------------
 
     app.post('/auth-portal/login', (req, res) => {
-      const username = req.body.user;
+      const username = req.body.username;
       const pass = req.body.pass;
       if (typeof username != 'string' || typeof pass != 'string') {
         handleGenericError(req, res, kResultInvalid);
@@ -140,7 +137,7 @@ export class AppExpress {
       }
       const session = extractUserSession(req.session);
 
-      // TODO: 試行回数の利用(記録するだけで禁止したりしていない)
+      // TODO: 試行回数はセッションではなくDBに記録するべき
 
       // increment tryToLogin
       session.tryToLogin += 1;
@@ -157,8 +154,8 @@ export class AppExpress {
           req.session.regenerate((_err) => {
             // session is updated by appHandler.login
             session.put(req.session);
-            // TODO: change to 204
-            res.redirect('/auth-portal/login'); // GET /auth-portal/login
+            res.status(204); // no content
+            res.send();
           });
         })
         .catch((e) => handleInternalError(req, res, e));
@@ -172,7 +169,10 @@ export class AppExpress {
         .logout(session)
         .then((res1) => {
           req.session.destroy((_err) => {
-            res.redirect('/auth-portal/login'); // GET /auth-portal/logout
+            res.status(204); // no content
+            res.send();
+            res.status(204); // no content
+            res.send();
           });
         })
         .catch((e) => handleInternalError(req, res, e));

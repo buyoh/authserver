@@ -5,15 +5,53 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <link rel="stylesheet" href="/auth-portal/assets/style.css">
+  <script src="/auth-portal/assets/api.js"></script>
+  <title>Login</title>
 </head>
 
 <body>
-  <form action="/auth-portal/login" method="POST">
-    <input class="form-input" type="text" name="user" placeholder="username">
-    <input class="form-input" type="text" name="pass" placeholder="onetime password">
-    <button class="form-button" type="submit">login</button>
-  </form>
+  <div class="pagewrapper-full">
+    <div id="form-login-wrap" class="content">
+      <h2 class="strong">Login</h2>
+      <form onsubmit="handleEvent_login(event)" id="form-login">
+        <div>
+          <input class="large spaced-block" type="text" name="username" placeholder="username" spellcheck="false"
+            required="true" minlength="2" autocomplete="off" autocapitalize="off">
+          <input class="large spaced-block" type="text" name="pass" placeholder="onetime password">
+        </div>
+        <button class="large block special" type="submit">login</button>
+        <hr>
+        <div>
+          <output class="highlight" name="log"></output>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function handleEvent_login(event) {
+      event.preventDefault();
+      const form = event.target;
+      const username = form.username.value;
+      const pass = form.pass.value;
+
+      const res1 = await fetchLogin(username, pass);
+      if (400 <= res1.status && res1.status < 500) {
+        form.log.value = "bad request :(";
+        // bad request
+        return;
+      }
+      if (200 <= res1.status && res1.status < 300) {
+        form.log.value = "reloading...";
+        location.reload();
+        return;
+      }
+      form.log.value = "internal error :(";
+    }
+    contentLoaded(() => {
+    });
+  </script>
 
 </body>
 

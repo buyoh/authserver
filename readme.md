@@ -26,12 +26,12 @@ CONTAINER ID   IMAGE           COMMAND                  CREATED         STATUS  
 - access `one.app.localhost:4000` (ok)
 - access `app.localhost:4000/private/` (403)
 - access `one.app.localhost:4000/private/` (403)
-- access and login `app.localhost:4000/auth-portal/login`
+- access and login `app.localhost:4000/auth-portal/`
 - access `app.localhost:4000` (ok)
 - access `one.app.localhost:4000` (ok)
 - access `app.localhost:4000/private/` (ok)
 - access `one.app.localhost:4000/private/` (ok)
-- access and logout `app.localhost:4000/auth-portal/login`
+- access and logout `app.localhost:4000/auth-portal/`
 - access `app.localhost:4000` (ok)
 - access `one.app.localhost:4000` (ok)
 - access `app.localhost:4000/private/` (403)
