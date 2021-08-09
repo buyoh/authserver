@@ -1,17 +1,45 @@
 # authserver
 
-# testing
+an authentication server for subrequest-authentication
+
+## overview
+
+ログイン認証を行うためのサーバです。
+
+- セッションの維持
+- アカウントの管理
+- 簡易な web インターフェース
+
+## with nginx
+
+https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subrequest-authentication/
+
+- `auth_request` に `/auth` を割り当てると、nginx への特定のリクエストに対して、認証が出来ます。
+
+## TODO
+
+- replace oss
+- dockerize-compose
+- unittest
+
+## testing
 
 ```
 # terminal 1
 yarn
-yarn start
+ADMIN_USERNAME=authroot yarn start
 ```
 
 ```
 # terminal 2
 cd testing
 ./nginx-docker.sh
+```
+
+```
+# terminal 3
+cd testing
+./mongodb-docker.sh
 ```
 
 check that the container is working
