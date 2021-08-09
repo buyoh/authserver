@@ -48,15 +48,16 @@ function handleGenericError(
   res: Express.Response<any>,
   error: ResultErrors
 ) {
+  const data = { ok: false, detail: error.detail };
   if (error.result === 'forbidden') {
     res.status(403);
-    res.json({ ok: false });
+    res.json(data);
   } else if (error.result === 'invalid') {
     res.status(400);
-    res.json({ ok: false });
+    res.json(data);
   } else if (error.result === 'notfound') {
     res.status(404);
-    res.json({ ok: false });
+    res.json(data);
   } else {
     handleInternalError(req, res, error);
   }
@@ -136,12 +137,6 @@ export class AppExpress {
         return;
       }
       const session = extractUserSession(req.session);
-
-      // TODO: 試行回数はセッションではなくDBに記録するべき
-
-      // increment tryToLogin
-      session.tryToLogin += 1;
-      session.put(req.session);
 
       this.appHandler
         .login(session, username, pass)

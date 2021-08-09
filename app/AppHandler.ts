@@ -26,10 +26,9 @@ export class AppHandler {
     pass: string
   ): Promise<ResultOk | ResultErrors> {
     const res = await this.resource.getUserManager().testUser(username, pass);
-    if (!res.ok) {
-      return kResultInvalid;
+    if (res.ok === false) {
+      return res;
     }
-    session.tryToLogin = 0;
     session.username = res.username;
     session.level = res.level;
     return { ok: true };

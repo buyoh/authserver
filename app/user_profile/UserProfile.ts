@@ -17,6 +17,9 @@ export type AuthLevel =
   | typeof AuthLevelMember
   | typeof AuthLevelNone;
 
+export const kMaxTryCount = 3;
+export const kAuthPenaltySec = 60;
+
 //
 
 export interface User {

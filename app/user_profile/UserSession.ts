@@ -15,19 +15,13 @@ import {
 export class UserSession {
   username: string | null;
   level: AuthLevel;
-  tryToLogin: number;
 
   constructor(a: any) {
-    if (
-      !a ||
-      a.username === undefined ||
-      a.level === undefined ||
-      a.tryToLogin === undefined
-    ) {
+    if (!a || a.username === undefined || a.level === undefined) {
       this.setInvalid();
       return;
     }
-    const { username, level, tryToLogin } = a;
+    const { username, level } = a;
     if (!isValudUsername(username)) {
       this.setInvalid();
       return;
@@ -39,7 +33,6 @@ export class UserSession {
     }
     this.username = username;
     this.level = convertedLevel;
-    this.tryToLogin = tryToLogin ? tryToLogin : 0;
   }
 
   static createEmpty(): UserSession {
@@ -55,12 +48,10 @@ export class UserSession {
   put(a: any): void {
     a.username = this.username;
     a.level = this.level;
-    a.tryToLogin = this.tryToLogin;
   }
 
   setInvalid(): void {
     this.username = null;
     this.level = AuthLevelNone;
-    this.tryToLogin = 0;
   }
 }

@@ -38,8 +38,8 @@
 
       const res1 = await fetchLogin(username, pass);
       if (400 <= res1.status && res1.status < 500) {
-        form.log.value = "bad request :(";
-        // bad request
+        const json = await res1.json();
+        form.log.value = json.detail ? json.detail : "bad request :(";
         return;
       }
       if (200 <= res1.status && res1.status < 300) {

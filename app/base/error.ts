@@ -7,6 +7,7 @@ export interface ResultOk {
 
 interface ResultNg {
   ok: false;
+  detail?: string;
 }
 
 export type ResultNotFound = ResultNg & { result: 'notfound' };
