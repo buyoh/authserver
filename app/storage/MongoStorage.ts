@@ -9,7 +9,9 @@ import {
 let mongodb = null as MongoClient | null;
 
 export async function connect(): Promise<void> {
-  mongodb = await MongoClient.connect('mongodb://root:example@127.0.0.1:27017');
+  let mongodb_domain = process.env.MONGODB_DOMAIN as string;
+  if (!mongodb_domain) mongodb_domain = 'root:example@127.0.0.1:27017';
+  mongodb = await MongoClient.connect('mongodb://' + mongodb_domain);
 }
 
 export async function createCollection(

@@ -16,6 +16,18 @@ https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subreques
 
 - `auth_request` に `/auth` を割り当てると、nginx への特定のリクエストに対して、認証が出来ます。
 
+## launch
+
+```
+docker-compsose up
+```
+
+cleanup
+
+```
+docker-compose down --rmi all --volumes --remove-orphans
+```
+
 ## TODO
 
 - replace oss
