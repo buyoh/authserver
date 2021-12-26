@@ -57,7 +57,7 @@ export class MongoStorage implements KeyValueStorage {
     if (!this.collection) {
       throw new Error('mongo storage is not initialized');
     }
-    const doc = await this.collection.findOne({ _id: key });
+    const doc = await this.collection.findOne({ id: key });
     if (!doc) {
       return kResultNotFound;
     }
@@ -80,7 +80,7 @@ export class MongoStorage implements KeyValueStorage {
     );
 
     const li = (await cursor.toArray()).map((e) => ({
-      key: e._id,
+      key: e.id,
       data: e.data,
     }));
 
@@ -94,7 +94,7 @@ export class MongoStorage implements KeyValueStorage {
     if (!this.collection) {
       throw new Error('mongo storage is not initialized');
     }
-    const res = await this.collection.insertOne({ _id: key, data } as any);
+    const res = await this.collection.insertOne({ id: key, data } as any);
     if (!res.acknowledged) {
       return kResultInvalid;
     }
@@ -107,8 +107,8 @@ export class MongoStorage implements KeyValueStorage {
       throw new Error('mongo storage is not initialized');
     }
     const res = await this.collection.updateOne(
-      { _id: key },
-      { _id: key, ...data },
+      { id: key },
+      { id: key, ...data },
       { upsert: false }
     );
     if (!res.acknowledged) {
@@ -123,7 +123,7 @@ export class MongoStorage implements KeyValueStorage {
     if (!this.collection) {
       throw new Error('mongo storage is not initialized');
     }
-    const res = await this.collection.deleteOne({ _id: key });
+    const res = await this.collection.deleteOne({ id: key });
     if (!res.acknowledged) {
       return kResultInvalid;
     }
