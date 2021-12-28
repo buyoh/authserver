@@ -1,7 +1,9 @@
+import { AppConfig, importAppConfigFromEnv } from './AppConfig';
 import { AppExpress } from './AppExpress';
 import { AppHandler } from './AppHandler';
 import { OtpAuthCrypto } from './crypto/OtpAuthCrypto';
-import * as MongoStorage from './storage/MongoStorage';
+import { ResourceProvider as ResourceManager } from './ResourceProvider';
+import { createMongoStorage } from './storage/StorageBuilder';
 import { AuthLevelAdmin } from './user_profile/UserProfile';
 import { UserProfileManager } from './user_profile/UserProfileManager';
 
@@ -11,27 +13,6 @@ import { UserProfileManager } from './user_profile/UserProfileManager';
 // - 初期化やリソースの管理
 
 //
-
-async function initializeUserManager(): Promise<UserProfileManager> {
-  //
-  await MongoStorage.connect();
-  try {
-    await MongoStorage.createCollection('authserver', 'user');
-  } catch (e) {
-    console.warn('Collection already exists?');
-    // Collection already exists
-  }
-
-  const passCrypto = new OtpAuthCrypto();
-
-  const passStorage = await new MongoStorage.MongoStorage('authserver', 'user');
-  await passStorage.initialize();
-  return new UserProfileManager(passStorage, passCrypto);
-
-  // const passStorage = new VolatileStorage();
-  // passStorage.initialize();
-  // this.userManager = new UserProfileManager(passStorage);
-}
 
 async function createAdminUser(
   userManager: UserProfileManager,
@@ -51,20 +32,30 @@ async function createAdminUser(
 
 //
 
-export interface AppControllerResourceProvider {
-  getUserManager(): UserProfileManager;
-}
-
-class AppControllerResourceProviderImpl
-  implements AppControllerResourceProvider
-{
-  userManager: () => UserProfileManager;
-  constructor(userManager: () => UserProfileManager) {
-    this.userManager = userManager;
+class ResourceManagerAppImpl implements ResourceManager {
+  userProfileManager: UserProfileManager;
+  constructor(userProfileManager: UserProfileManager) {
+    this.userProfileManager = userProfileManager;
   }
   getUserManager(): UserProfileManager {
-    return this.userManager();
+    return this.userProfileManager;
   }
+}
+
+async function createResourceManagerAppImpl(
+  config: AppConfig
+): Promise<ResourceManagerAppImpl> {
+  // TODO: separeate Storage and Crypto, UserProfileManagers
+
+  const passStorage = await createMongoStorage('authserver', 'user');
+  const passCrypto = new OtpAuthCrypto();
+  const userManager = new UserProfileManager(passStorage, passCrypto);
+  // const passStorage = new VolatileStorage();
+  // passStorage.initialize();
+  // const userManager = new UserProfileManager(passStorage);
+
+  await createAdminUser(userManager, config.adminUsername);
+  return new ResourceManagerAppImpl(userManager);
 }
 
 //
@@ -75,20 +66,13 @@ export class AppController {
   }
   start(): void {
     (async () => {
-      const adminUsername = process.env.ADMIN_USERNAME as string;
-      const port = (process.env.PORT as string) || '8888';
-      if (!adminUsername) {
-        console.error('env.ADMIN_USERNAME is empty');
-        process.exit(2);
-      }
+      const config = importAppConfigFromEnv();
 
-      const userManager = await initializeUserManager();
-      await createAdminUser(userManager, adminUsername);
-      const resource = new AppControllerResourceProviderImpl(() => userManager);
+      const resource = await createResourceManagerAppImpl(config);
       const handler = new AppHandler(resource);
       const express = new AppExpress(handler);
       express.initialize();
-      express.listen(port);
+      express.listen(config.port);
     })();
   }
 }

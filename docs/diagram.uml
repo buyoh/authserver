@@ -1,0 +1,61 @@
+@startuml
+skinparam componentStyle rectangle
+
+' ---------------------------------------------------------
+' components
+
+package app{
+interface ResourceProvider
+
+class AppController
+class AppExpress
+class AppHandler
+class ResourceManagerAppImpl
+}
+
+package user_profile {
+class UserProfileManager
+}
+
+package crypto {
+class OtpAuthCrypto
+}
+
+package storage{
+interface KeyValusStorageInterface
+class MongoStorage
+() StorageBuilder
+}
+
+interface express
+
+' ---------------------------------------------------------
+' relations
+
+' === app ===
+
+AppController o--> AppExpress
+AppController ..> AppHandler
+AppController ..> StorageBuilder
+AppController ..> ResourceManagerAppImpl
+
+ResourceProvider ..> UserProfileManager
+ResourceManagerAppImpl -|> ResourceProvider
+ResourceManagerAppImpl o--> UserProfileManager
+
+AppHandler o--> ResourceProvider
+
+AppExpress o--> AppHandler
+AppExpress ..> express
+
+' === user_profile ===
+
+UserProfileManager o--> KeyValusStorageInterface
+UserProfileManager o--> OtpAuthCrypto
+
+' === storage ===
+
+MongoStorage -|> KeyValusStorageInterface
+StorageBuilder ..> MongoStorage
+
+@enduml

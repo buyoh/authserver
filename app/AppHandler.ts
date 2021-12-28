@@ -1,10 +1,5 @@
-import { AppControllerResourceProvider } from './AppController';
-import {
-  kResultForbidden,
-  kResultInvalid,
-  ResultErrors,
-  ResultOk,
-} from './base/error';
+import { kResultForbidden, ResultErrors, ResultOk } from './base/error';
+import { ResourceProvider } from './ResourceProvider';
 import {
   AuthLevel,
   AuthLevelAdmin,
@@ -14,9 +9,9 @@ import {
 import { UserSession } from './user_profile/UserSession';
 
 export class AppHandler {
-  private resource: AppControllerResourceProvider;
+  private resource: ResourceProvider;
 
-  constructor(resource: AppControllerResourceProvider) {
+  constructor(resource: ResourceProvider) {
     this.resource = resource;
   }
 

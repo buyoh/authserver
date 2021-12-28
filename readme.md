@@ -64,8 +64,8 @@ CONTAINER ID   IMAGE           COMMAND                  CREATED         STATUS  
 
 - access `app.localhost:4000` (ok)
 - access `one.app.localhost:4000` (ok)
-- access `app.localhost:4000/private/` (403)
-- access `one.app.localhost:4000/private/` (403)
+- access `app.localhost:4000/private/` (403/401)
+- access `one.app.localhost:4000/private/` (403/401)
 - access and login `app.localhost:4000/auth-portal/`
 - access `app.localhost:4000` (ok)
 - access `one.app.localhost:4000` (ok)
@@ -74,8 +74,8 @@ CONTAINER ID   IMAGE           COMMAND                  CREATED         STATUS  
 - access and logout `app.localhost:4000/auth-portal/`
 - access `app.localhost:4000` (ok)
 - access `one.app.localhost:4000` (ok)
-- access `app.localhost:4000/private/` (403)
-- access `one.app.localhost:4000/private/` (403)
+- access `app.localhost:4000/private/` (403/401)
+- access `one.app.localhost:4000/private/` (403/401)
 
 ```
 # kill docker
