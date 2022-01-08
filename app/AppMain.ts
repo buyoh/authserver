@@ -60,7 +60,7 @@ async function createResourceManagerAppImpl(
 
 //
 
-export class AppController {
+export class AppMain {
   constructor() {
     //
   }

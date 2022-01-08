@@ -7,7 +7,7 @@ skinparam componentStyle rectangle
 package app{
 interface ResourceProvider
 
-class AppController
+class AppMain
 class AppExpress
 class AppHandler
 class ResourceManagerAppImpl
@@ -34,25 +34,24 @@ interface express
 
 ' === app ===
 
-AppController o--> AppExpress
-AppController ..> AppHandler
-AppController ..> StorageBuilder
-AppController ..> ResourceManagerAppImpl
+AppMain o--> AppExpress
+AppMain ..> AppHandler
+AppMain ..> StorageBuilder
+AppMain ..> ResourceManagerAppImpl
 
 ResourceProvider ..> UserProfileManager
-ResourceManagerAppImpl -|> ResourceProvider
-ResourceManagerAppImpl o--> UserProfileManager
+ResourceManagerAppImpl -up-|> ResourceProvider
+ResourceManagerAppImpl o--> UserProfileManagerImpl
 
 AppHandler o--> ResourceProvider
 
-AppExpress o--> AppHandler
+AppExpress o-right-> AppHandler
 AppExpress ..> express
 
 ' === user_profile ===
 
 UserProfileManager o--> KeyValusStorageInterface
 UserProfileManager o--> OtpAuthCrypto
-
 ' === storage ===
 
 MongoStorage -|> KeyValusStorageInterface

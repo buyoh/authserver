@@ -1,3 +1,3 @@
-import { AppController } from './AppController';
+import { AppMain } from './AppMain';
 
-new AppController().start();
+new AppMain().start();
