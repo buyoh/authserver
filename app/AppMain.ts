@@ -6,6 +6,7 @@ import { ResourceProvider as ResourceManager } from './ResourceProvider';
 import { createMongoStorage } from './storage/StorageBuilder';
 import { AuthLevelAdmin } from './user_profile/UserProfile';
 import { UserProfileManager } from './user_profile/UserProfileManager';
+import { UserProfileManagerImpl } from './user_profile/UserProfileManagerImpl';
 
 //
 
@@ -33,26 +34,26 @@ async function createAdminUser(
 //
 
 class ResourceManagerAppImpl implements ResourceManager {
-  userProfileManager: UserProfileManager;
-  constructor(userProfileManager: UserProfileManager) {
-    this.userProfileManager = userProfileManager;
+  UserProfileManagerImpl: UserProfileManagerImpl;
+  constructor(UserProfileManagerImpl: UserProfileManagerImpl) {
+    this.UserProfileManagerImpl = UserProfileManagerImpl;
   }
   getUserManager(): UserProfileManager {
-    return this.userProfileManager;
+    return this.UserProfileManagerImpl;
   }
 }
 
 async function createResourceManagerAppImpl(
   config: AppConfig
 ): Promise<ResourceManagerAppImpl> {
-  // TODO: separeate Storage and Crypto, UserProfileManagers
+  // TODO: separeate Storage and Crypto, UserProfileManagerImpls
 
   const passStorage = await createMongoStorage('authserver', 'user');
   const passCrypto = new OtpAuthCrypto();
-  const userManager = new UserProfileManager(passStorage, passCrypto);
+  const userManager = new UserProfileManagerImpl(passStorage, passCrypto);
   // const passStorage = new VolatileStorage();
   // passStorage.initialize();
-  // const userManager = new UserProfileManager(passStorage);
+  // const userManager = new UserProfileManagerImpl(passStorage);
 
   await createAdminUser(userManager, config.adminUsername);
   return new ResourceManagerAppImpl(userManager);

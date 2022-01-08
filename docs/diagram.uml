@@ -14,7 +14,8 @@ class ResourceManagerAppImpl
 }
 
 package user_profile {
-class UserProfileManager
+class UserProfileManagerImpl
+interface UserProfileManager
 }
 
 package crypto {
@@ -50,8 +51,10 @@ AppExpress ..> express
 
 ' === user_profile ===
 
-UserProfileManager o--> KeyValusStorageInterface
-UserProfileManager o--> OtpAuthCrypto
+UserProfileManagerImpl -up-|> UserProfileManager
+UserProfileManagerImpl o--> KeyValusStorageInterface
+UserProfileManagerImpl o--> OtpAuthCrypto
+
 ' === storage ===
 
 MongoStorage -|> KeyValusStorageInterface

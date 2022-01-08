@@ -20,7 +20,9 @@ export class AppHandler {
     username: string,
     pass: string
   ): Promise<ResultOk | ResultErrors> {
-    const res = await this.resource.getUserManager().testUser(username, pass);
+    const res = await this.resource
+      .getUserManager()
+      .testUser(username, pass, true);
     if (res.ok === false) {
       return res;
     }
