@@ -11,7 +11,7 @@ import {
   AuthLevelMember,
   User,
 } from './user_profile/UserProfile';
-import { UserSession } from './user_profile/UserSession';
+import { AppUserSession } from './AppUserSession';
 import { UserProfileManager } from './user_profile/UserProfileManager';
 
 const defaultUsers = [
@@ -86,7 +86,7 @@ describe('test', () => {
   it('getUsers', async () => {
     const resourceProvider = new ResourceProviderTestImpl();
     const handler = new AppHandler(resourceProvider);
-    const session = new UserSession({
+    const session = new AppUserSession({
       username: 'admin',
       level: AuthLevelAdmin,
     });
@@ -102,7 +102,7 @@ describe('test', () => {
   it('testUser: authorize', async () => {
     const resourceProvider = new ResourceProviderTestImpl();
     const handler = new AppHandler(resourceProvider);
-    const session = UserSession.createEmpty();
+    const session = AppUserSession.createEmpty();
     const res = await handler.login(session, 'admin', 'pass');
     expect(res.ok).toBeTruthy();
     if (!res.ok) return;

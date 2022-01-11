@@ -3,7 +3,7 @@ import {
   AuthLevelNone,
   convertToAuthLevel,
   isValudUsername,
-} from './UserProfile';
+} from './user_profile/UserProfile';
 
 //
 
@@ -12,7 +12,7 @@ import {
 
 //
 
-export class UserSession {
+export class AppUserSession {
   username: string | null;
   level: AuthLevel;
 
@@ -35,8 +35,8 @@ export class UserSession {
     this.level = convertedLevel;
   }
 
-  static createEmpty(): UserSession {
-    return new UserSession(null);
+  static createEmpty(): AppUserSession {
+    return new AppUserSession(null);
   }
 
   isLoggedIn(): boolean {

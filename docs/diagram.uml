@@ -11,11 +11,14 @@ class AppMain
 class AppExpress
 class AppHandler
 class ResourceManagerAppImpl
+class AppUserSession
 }
 
 package user_profile {
 class UserProfileManagerImpl
 interface UserProfileManager
+
+class User
 }
 
 package crypto {
@@ -45,15 +48,22 @@ ResourceManagerAppImpl -up-|> ResourceProvider
 ResourceManagerAppImpl o--> UserProfileManagerImpl
 
 AppHandler o--> ResourceProvider
+AppHandler ..> User
+AppHandler ..> AppUserSession
+AppHandler ..> UserProfileManager
+
 
 AppExpress o-right-> AppHandler
 AppExpress ..> express
+AppExpress o..> AppUserSession
 
 ' === user_profile ===
 
 UserProfileManagerImpl -up-|> UserProfileManager
 UserProfileManagerImpl o--> KeyValusStorageInterface
 UserProfileManagerImpl o--> OtpAuthCrypto
+UserProfileManager ..> User
+UserProfileManagerImpl ..> User
 
 ' === storage ===
 

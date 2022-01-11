@@ -3,7 +3,7 @@ import * as ExpressSession from 'express-session';
 import { AppHandler } from './AppHandler';
 import { kResultInvalid, ResultErrors } from './base/error';
 import { convertToAuthLevel } from './user_profile/UserProfile';
-import { UserSession } from './user_profile/UserSession';
+import { AppUserSession } from './AppUserSession';
 
 //
 
@@ -32,8 +32,8 @@ const sessionConfig = {
 
 //
 
-function extractUserSession(a: any): UserSession {
-  return new UserSession(a);
+function extractUserSession(a: any): AppUserSession {
+  return new AppUserSession(a);
 }
 
 //

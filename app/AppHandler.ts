@@ -6,7 +6,7 @@ import {
   isEditableAuthLevel,
   User,
 } from './user_profile/UserProfile';
-import { UserSession } from './user_profile/UserSession';
+import { AppUserSession } from './AppUserSession';
 
 export class AppHandler {
   private resource: ResourceProvider;
@@ -16,7 +16,7 @@ export class AppHandler {
   }
 
   async login(
-    session: UserSession,
+    session: AppUserSession,
     username: string,
     pass: string
   ): Promise<ResultOk | ResultErrors> {
@@ -31,20 +31,20 @@ export class AppHandler {
     return { ok: true };
   }
 
-  async logout(session: UserSession): Promise<ResultOk | ResultErrors> {
+  async logout(session: AppUserSession): Promise<ResultOk | ResultErrors> {
     session.setInvalid();
     return { ok: true };
   }
 
   async getUser(
-    session: UserSession,
+    session: AppUserSession,
     username: string
   ): Promise<(ResultOk & User) | ResultErrors> {
     const res = await this.resource.getUserManager().getUser(username);
     return res;
   }
 
-  async getUsers(session: UserSession): Promise<
+  async getUsers(session: AppUserSession): Promise<
     | (ResultOk & {
         data: Array<{ username: string; level: AuthLevel; me: boolean }>;
       })
@@ -65,7 +65,7 @@ export class AppHandler {
   }
 
   async createUser(
-    session: UserSession,
+    session: AppUserSession,
     username: string,
     level: AuthLevel
   ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors> {
@@ -82,7 +82,7 @@ export class AppHandler {
   }
 
   async deleteUser(
-    session: UserSession,
+    session: AppUserSession,
     username: string
   ): Promise<ResultOk | ResultErrors> {
     const m = this.resource.getUserManager();
