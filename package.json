@@ -4,9 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node app/index.ts",
-    "lint": "prettier --check 'app/**/*.ts' && eslint app/**/*.ts",
-    "lint-fix": "prettier --write 'app/**/*.ts'",
+    "start": "ts-node src/index.ts",
+    "lint": "prettier --check 'src/**/*.ts' && eslint src/**/*.ts",
+    "lint-fix": "prettier --write 'src/**/*.ts'",
     "test": "jest --coverage",
     "test-update": "jest --updateSnapshot"
   },

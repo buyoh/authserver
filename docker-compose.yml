@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
     volumes:
       - /opt/app/node_modules
-      - ./app:/opt/app/app
+      - ./src:/opt/app/src
       - ./package.json:/opt/app/package.json
       - ./yarn.lock:/opt/app/yarn.lock
       # - ./tsconfig.json:/opt/app/tsconfig.json
