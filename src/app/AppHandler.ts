@@ -1,11 +1,11 @@
-import { kResultForbidden, ResultErrors, ResultOk } from './base/error';
+import { kResultForbidden, ResultErrors, ResultOk } from '../base/error';
 import { ResourceProvider } from './ResourceProvider';
 import {
   AuthLevel,
   AuthLevelAdmin,
   isEditableAuthLevel,
   User,
-} from './user_profile/UserProfile';
+} from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
 
 export class AppHandler {

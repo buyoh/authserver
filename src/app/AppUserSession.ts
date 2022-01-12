@@ -3,7 +3,7 @@ import {
   AuthLevelNone,
   convertToAuthLevel,
   isValudUsername,
-} from './user_profile/UserProfile';
+} from '../user_profile/UserProfile';
 
 //
 

@@ -1,8 +1,8 @@
 import * as Express from 'express';
 import * as ExpressSession from 'express-session';
 import { AppHandler } from './AppHandler';
-import { kResultInvalid, ResultErrors } from './base/error';
-import { convertToAuthLevel } from './user_profile/UserProfile';
+import { kResultInvalid, ResultErrors } from '../base/error';
+import { convertToAuthLevel } from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
 
 //

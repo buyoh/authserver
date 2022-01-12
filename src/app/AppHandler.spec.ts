@@ -4,15 +4,15 @@ import {
   ResultErrors,
   kResultNotFound,
   kResultInvalid,
-} from './base/error';
+} from '../base/error';
 import { ResourceProvider } from './ResourceProvider';
 import {
   AuthLevelAdmin,
   AuthLevelMember,
   User,
-} from './user_profile/UserProfile';
+} from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
-import { UserProfileManager } from './user_profile/UserProfileManager';
+import { UserProfileManager } from '../user_profile/UserProfileManager';
 
 const defaultUsers = [
   {

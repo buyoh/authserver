@@ -1,12 +1,12 @@
 import { AppConfig, importAppConfigFromEnv } from './AppConfig';
 import { AppExpress } from './AppExpress';
 import { AppHandler } from './AppHandler';
-import { OtpAuthCrypto } from './crypto/OtpAuthCrypto';
+import { OtpAuthCrypto } from '../crypto/OtpAuthCrypto';
 import { ResourceProvider as ResourceManager } from './ResourceProvider';
-import { createMongoStorage } from './storage/StorageBuilder';
-import { AuthLevelAdmin } from './user_profile/UserProfile';
-import { UserProfileManager } from './user_profile/UserProfileManager';
-import { UserProfileManagerImpl } from './user_profile/UserProfileManagerImpl';
+import { createMongoStorage } from '../storage/StorageBuilder';
+import { AuthLevelAdmin } from '../user_profile/UserProfile';
+import { UserProfileManager } from '../user_profile/UserProfileManager';
+import { UserProfileManagerImpl } from '../user_profile/UserProfileManagerImpl';
 
 //
 
