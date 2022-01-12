@@ -1,0 +1,122 @@
+swagger: '2.0'
+
+info:
+  version: "0.0.0"
+  title: authserver
+  description: |
+    WORK IN PROGRESS
+    
+paths:
+  /auth-portal/:
+    get:
+      description: |
+        login page / management page
+
+      parameters:
+        -
+          name: id
+          in: path
+          description: Id of array
+          required: true
+          type: number
+          format: double
+
+      responses:
+        200:
+          description: HTML
+
+  /auth-portal/login:
+    post:
+      description: |
+        login page / management page
+
+      parameters:
+        - name: username
+          in: query
+          description: username
+          required: true
+          type: string
+        -
+          name: pass
+          in: query
+          description: password
+          required: false
+          type: string
+
+      responses:
+        204:
+          description: Successful responses
+        403:
+          description: fobidden
+          schema:
+            title: body
+            type: object
+            properties:
+              ok:
+                type: boolean
+              error:
+                type: string
+        400:
+          description: invalid
+          schema:
+            title: body
+            type: object
+            properties:
+              ok:
+                type: boolean
+              error:
+                type: string
+        404:
+          description: not found
+          schema:
+            title: body
+            type: object
+            properties:
+              ok:
+                type: boolean
+              error:
+                type: string
+
+  /auth-portal/logout:
+    post:
+      responses:
+        200:
+          description: Successful responses
+
+  /auth-portal/me:
+    get:
+      responses:
+        200:
+          description: Successful responses
+  
+  /auth-portal/user/{username}:
+    get:
+      description: |
+        [TODO]
+
+      parameters:
+        -
+          name: username
+          in: path
+          description: username
+          required: true
+          type: string
+
+      responses:
+        200:
+          description: Successful responses
+
+    delete:
+      responses:
+        200:
+          description: Successful responses
+
+  /auth-portal/user:
+    get:
+      responses:
+        200:
+          description: Successful responses
+    post:
+      responses:
+        200:
+          description: Successful responses
