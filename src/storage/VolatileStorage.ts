@@ -5,11 +5,19 @@ import {
   KeyValueStorageResultMany,
 } from './KeyValueStorageInterface';
 
+const globalStore = {} as { [key: string]: { [key: string]: string } };
+
 export class VolatileStorage implements KeyValueStorage {
   private storage: { [key: string]: string };
-  async initialize(): Promise<void> {
-    this.storage = {};
+
+  constructor(dbName: string) {
+    this.storage = globalStore[dbName] || {};
   }
+
+  async initialize(): Promise<void> {
+    //
+  }
+
   async get(key: string): Promise<KeyValueStorageResult> {
     if (!this.storage[key]) {
       return kResultNotFound;
@@ -19,6 +27,7 @@ export class VolatileStorage implements KeyValueStorage {
       data: JSON.parse(this.storage[key]),
     };
   }
+
   async all(
     length?: number,
     offset?: number
@@ -33,6 +42,7 @@ export class VolatileStorage implements KeyValueStorage {
       data: li,
     };
   }
+
   async insert(key: string, data: any): Promise<KeyValueStorageResult> {
     if (this.storage[key]) {
       return kResultInvalid;
@@ -41,6 +51,7 @@ export class VolatileStorage implements KeyValueStorage {
     this.storage[key] = data_str;
     return { ok: true };
   }
+
   async update(key: string, data: any): Promise<KeyValueStorageResult> {
     if (!this.storage[key]) {
       return kResultInvalid;
@@ -50,6 +61,7 @@ export class VolatileStorage implements KeyValueStorage {
     this.storage[key] = data_str;
     return { ok: true };
   }
+
   async erase(query: any): Promise<KeyValueStorageResult> {
     const key = JSON.stringify(query);
     delete this.storage[key];

@@ -8,10 +8,8 @@ import {
 
 let mongodb = null as MongoClient | null;
 
-export async function connect(): Promise<void> {
-  let mongodb_domain = process.env.MONGODB_DOMAIN as string;
-  if (!mongodb_domain) mongodb_domain = 'root:example@127.0.0.1:27017';
-  mongodb = await MongoClient.connect('mongodb://' + mongodb_domain);
+export async function connect(mongodbDomain: string): Promise<void> {
+  mongodb = await MongoClient.connect('mongodb://' + mongodbDomain);
 }
 
 export async function createCollection(
@@ -19,6 +17,7 @@ export async function createCollection(
   collectionName: string,
   validator?: object
 ): Promise<void> {
+  // NOTE: validator is not used...
   if (mongodb === null) throw null;
   // https://docs.mongodb.com/v4.4/core/schema-validation/
   const db = mongodb.db(dbName);
@@ -39,6 +38,12 @@ export class MongoStorage implements KeyValueStorage {
 
   async initialize(): Promise<void> {
     if (mongodb === null) throw new Error('mongodb is not initialized');
+
+    try {
+      await createCollection(this.dbName, this.collectionName);
+    } catch (e) {
+      // Collection already exists
+    }
 
     // check whether the collection exists
     const db = mongodb.db(this.dbName);

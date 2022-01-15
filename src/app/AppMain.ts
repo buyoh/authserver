@@ -3,7 +3,7 @@ import { AppExpress } from './AppExpress';
 import { AppHandler } from './AppHandler';
 import { OtpAuthCrypto } from '../crypto/OtpAuthCrypto';
 import { ResourceProvider as ResourceManager } from './ResourceProvider';
-import { createMongoStorage } from '../storage/StorageBuilder';
+import { createStorage } from '../storage/StorageBuilder';
 import { AuthLevelAdmin } from '../user_profile/UserProfile';
 import { UserProfileManager } from '../user_profile/UserProfileManager';
 import { UserProfileManagerImpl } from '../user_profile/UserProfileManagerImpl';
@@ -48,7 +48,17 @@ async function createResourceManagerAppImpl(
 ): Promise<ResourceManagerAppImpl> {
   // TODO: separeate Storage and Crypto, UserProfileManagerImpls
 
-  const passStorage = await createMongoStorage('authserver', 'user');
+  const storageOptions = {
+    mongodbDomain: config.mongodbDomain,
+  };
+
+  const passStorage = await createStorage(
+    config.storageType,
+    'authserver',
+    'user',
+    storageOptions
+  );
+
   const passCrypto = new OtpAuthCrypto();
   const userManager = new UserProfileManagerImpl(passStorage, passCrypto);
   // const passStorage = new VolatileStorage();
