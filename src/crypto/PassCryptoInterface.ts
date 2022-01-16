@@ -1,33 +1,39 @@
-/**
- * @template PubSalt クライアントで暗号化する場合に、クライアントに渡す塩
- * @template PrivSalt クライアントで暗号化する場合に、サーバ内で秘匿する塩
- * @template ReqGen 暗号化対象・ユーザの生の識別情報
- * @template ResGen 認証に利用する外部に公開する情報
- * @template Secret 認証に利用する内部で秘匿する情報
- * @template Pass ユーザが認証時に入力する情報。パスワードなど。
- */
-export interface PassCryptoWithSalt<
-  PubSalt,
-  PrivSalt,
-  ReqGen,
-  ResGen,
-  Secret,
-  Pass
+export interface PassCryptoImpl<
+  SessionDataForGenerate,
+  ClientDataForGenerate,
+  UserInputForGenerate,
+  SecretData,
+  UserResultOfGenerate,
+  SessionDataForVerify,
+  ClientDataForVerify,
+  UserInputForVerify
 > {
-  generateSalt(): [PubSalt, PrivSalt];
-  generateKey(
-    reqGen: ReqGen,
-    pubSalt?: PubSalt,
-    privSalt?: PrivSalt
-  ): [ResGen, Secret];
+  beginToGenerate():
+    | { session: SessionDataForGenerate; client: ClientDataForGenerate }
+    | Error;
+  generate(
+    session: SessionDataForGenerate,
+    client: ClientDataForGenerate,
+    input: UserInputForGenerate
+  ): { secret: SecretData; result: UserResultOfGenerate } | Error;
+  beginToVerify(
+    secret: SecretData
+  ): { session: SessionDataForVerify; client: ClientDataForVerify } | Error;
   verify(
-    pass: Pass,
-    secret: Secret,
-    pubSalt?: PubSalt,
-    privSalt?: PrivSalt
+    secret: SecretData,
+    session: SessionDataForVerify,
+    client: SessionDataForVerify,
+    input: UserInputForVerify
   ): boolean;
 }
-export interface PassCryptoWithoutSalt<ReqGen, ResGen, Secret, Pass> {
-  generateKey(reqGen: ReqGen): [ResGen, Secret];
-  verify(pass: Pass, secret: Secret): boolean;
+
+export interface PassCrypto {
+  beginToGenerate(): { session: any; client: any } | Error;
+  generate(
+    session: any,
+    client: any,
+    input: any
+  ): { secret: any; result: any } | Error;
+  beginToVerify(secret: any): { session: any; client: any } | Error;
+  verify(secret: any, session: any, client: any, input: any): boolean;
 }

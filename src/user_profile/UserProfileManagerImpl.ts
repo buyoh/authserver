@@ -15,6 +15,7 @@ import {
 } from '../base/error';
 import { OtpAuthCrypto } from '../crypto/OtpAuthCrypto';
 import { UserProfileManager } from './UserProfileManager';
+import { PassCryptoProxy } from '../crypto/PassCryptoProxy';
 
 //
 
@@ -29,10 +30,10 @@ function isNeededPenalty(tryCount: number): null | number {
 
 export class UserProfileManagerImpl implements UserProfileManager {
   private passStorage: KeyValueStorage;
-  private passCrypto: OtpAuthCrypto;
+  private passCrypto: PassCryptoProxy;
   private testUserStartDate: number;
 
-  constructor(passStorage: KeyValueStorage, passCrypto: OtpAuthCrypto) {
+  constructor(passStorage: KeyValueStorage, passCrypto: PassCryptoProxy) {
     // TODO: 抽象化 OtpAuthCrypto
     this.passStorage = passStorage;
     this.passCrypto = passCrypto;
@@ -54,7 +55,13 @@ export class UserProfileManagerImpl implements UserProfileManager {
       // already exists
       return kResultInvalid;
     }
-    const [passres, secret] = this.passCrypto.generateKey({ username });
+
+    const res = this.passCrypto.generate({}, {}, { username });
+    if (res instanceof Error) return kResultInvalid;
+    const {
+      secret,
+      result: { otpauth_url },
+    } = res;
 
     const res2 = await this.passStorage.insert(user.username, {
       username: user.username,
@@ -66,7 +73,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
     if (!res2.ok) {
       throw new Error('unexpected error: insert failed');
     }
-    return { ok: true, otpauth_url: passres.otpauth_url };
+    return { ok: true, otpauth_url };
   }
 
   async getUser(username: string): Promise<(ResultOk & User) | ResultErrors> {
@@ -138,7 +145,12 @@ export class UserProfileManagerImpl implements UserProfileManager {
       );
     }
 
-    const res3 = this.passCrypto.verify(pass, resSecret as string);
+    const res3 = this.passCrypto.verify(
+      { secret: resSecret },
+      {},
+      {},
+      { pass }
+    );
     if (!res3) {
       if (incTryCount) {
         await this.setTryCount(
