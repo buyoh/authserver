@@ -9,23 +9,23 @@ function myfetch(uri, method, json) {
 }
 
 function fetchLogin(username, pass) {
-  return myfetch('/auth-portal/login', 'POST', { username, pass });
+  return myfetch('/auth-portal/api/login', 'POST', { username, pass });
 }
 
 function fetchLogout() {
-  return myfetch('/auth-portal/login', 'POST', {});
+  return myfetch('/auth-portal/api/login', 'POST', {});
 }
 
 function fetchGetAllUser() {
-  return fetch('/auth-portal/user');
+  return fetch('/auth-portal/api/user');
 }
 
 function fetchAddUser(username, level) {
-  return myfetch('/auth-portal/user', 'POST', { username, level });
+  return myfetch('/auth-portal/api/user', 'POST', { username, level });
 }
 
 function fetchDeleteUser(username) {
-  return myfetch('/auth-portal/user/' + username, 'DELETE', {});
+  return myfetch('/auth-portal/api/user/' + username, 'DELETE', {});
 }
 
 function contentLoaded(func) {

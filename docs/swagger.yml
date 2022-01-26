@@ -25,7 +25,7 @@ paths:
         200:
           description: HTML
 
-  /auth-portal/login:
+  /auth-portal/api/login:
     post:
       description: |
         login page / management page
@@ -77,19 +77,19 @@ paths:
               error:
                 type: string
 
-  /auth-portal/logout:
+  /auth-portal/api/logout:
     post:
       responses:
         200:
           description: Successful responses
 
-  /auth-portal/me:
+  /auth-portal/api/me:
     get:
       responses:
         200:
           description: Successful responses
   
-  /auth-portal/user/{username}:
+  /auth-portal/api/user/{username}:
     get:
       description: |
         [TODO]
@@ -111,7 +111,7 @@ paths:
         200:
           description: Successful responses
 
-  /auth-portal/user:
+  /auth-portal/api/user:
     get:
       responses:
         200:

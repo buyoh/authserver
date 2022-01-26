@@ -129,7 +129,7 @@ export class AppExpress {
 
     // --------------------------
 
-    app.post('/auth-portal/login', (req, res) => {
+    app.post('/auth-portal/api/login', (req, res) => {
       const username = req.body.username;
       const pass = req.body.pass;
       if (typeof username != 'string' || typeof pass != 'string') {
@@ -158,7 +158,7 @@ export class AppExpress {
 
     //
 
-    app.post('/auth-portal/logout', (req, res) => {
+    app.post('/auth-portal/api/logout', (req, res) => {
       const session = extractUserSession(req.session);
       this.appHandler
         .logout(session)
@@ -175,7 +175,7 @@ export class AppExpress {
 
     // --------------------------
 
-    app.get('/auth-portal/me', (req, res) => {
+    app.get('/auth-portal/api/me', (req, res) => {
       // check the session.
       const session = extractUserSession(req.session);
       if (!session.isLoggedIn()) {
@@ -189,7 +189,7 @@ export class AppExpress {
 
     //
 
-    app.get('/auth-portal/user/:username', (req, res) => {
+    app.get('/auth-portal/api/user/:username', (req, res) => {
       const { username } = req.params;
       const session = extractUserSession(req.session);
       if (!session.isLoggedIn()) {
@@ -218,7 +218,7 @@ export class AppExpress {
 
     //
 
-    app.get('/auth-portal/user', (req, res) => {
+    app.get('/auth-portal/api/user', (req, res) => {
       const session = extractUserSession(req.session);
       if (!session.isLoggedIn()) {
         handleUnauthorized(res);
@@ -246,7 +246,7 @@ export class AppExpress {
 
     //
 
-    app.post('/auth-portal/user', (req, res) => {
+    app.post('/auth-portal/api/user', (req, res) => {
       const session = extractUserSession(req.session);
       if (!session.isLoggedIn()) {
         handleUnauthorized(res);
@@ -280,7 +280,7 @@ export class AppExpress {
 
     //
 
-    app.delete('/auth-portal/user/:username', (req, res) => {
+    app.delete('/auth-portal/api/user/:username', (req, res) => {
       const { username } = req.params;
       const session = extractUserSession(req.session);
       if (!session.isLoggedIn()) {
