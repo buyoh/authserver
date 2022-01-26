@@ -4,6 +4,7 @@ import { AppHandler } from './AppHandler';
 import { kResultInvalid, ResultErrors } from '../base/error';
 import { convertToAuthLevel } from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
+import { WebContentsServerImpl } from '../web/WebContentsServer';
 
 //
 
@@ -112,18 +113,6 @@ export class AppExpress {
         res.send();
       } else {
         handleUnauthorized(res);
-      }
-    });
-
-    // --------------------------
-
-    app.use('/auth-portal/assets', Express.static(__dirname + '/html/assets'));
-    app.get('/auth-portal/', (req, res) => {
-      const session = extractUserSession(req.session);
-      if (session.isLoggedIn()) {
-        res.sendFile(__dirname + '/html/loggedin.html');
-      } else {
-        res.sendFile(__dirname + '/html/login.html');
       }
     });
 
@@ -302,6 +291,19 @@ export class AppExpress {
           res.send();
         })
         .catch((e) => handleInternalError(req, res, e));
+    });
+
+    // --------------------------
+
+    const webContentsServer = new WebContentsServerImpl();
+
+    app.get('/auth-portal/?*', (req, res, next) => {
+      const session = extractUserSession(req.session);
+      if (session.isLoggedIn()) {
+        webContentsServer.responseLoggedIn(req, res, next);
+      } else {
+        webContentsServer.responseNonLoggedIn(req, res, next);
+      }
     });
   }
 
