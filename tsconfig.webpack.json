@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "CommonJS",
+    "noImplicitAny": true,
+    "strict": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    // "jsx": "react",
+    "moduleResolution": "node",
+    "resolveJsonModule": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.css",
+    "**/*.scss",
+  ],
+}

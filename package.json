@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node src/index.ts",
+    "build": "TS_NODE_PROJECT='tsconfig.webpack.json' webpack --config webpack.prod.config.js",
     "lint": "prettier --check 'src/**/*.ts' && eslint src/**/*.ts",
     "lint-fix": "prettier --write 'src/**/*.ts'",
     "test": "jest --coverage",
@@ -20,18 +21,26 @@
     "typescript": "^4.5.4"
   },
   "devDependencies": {
-    "jest": "^27.4.5",
-    "ts-jest": "^27.1.2",
-    "@types/jest": "^27.0.3",
     "@types/express": "^4.17.13",
     "@types/express-session": "^1.17.4",
+    "@types/jest": "^27.0.3",
     "@types/mongodb": "^3.6.20",
     "@types/qrcode": "^1.4.2",
     "@types/speakeasy": "^2.0.7",
+    "@types/webpack-hot-middleware": "^2.25.5",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "prettier": "^2.5.1"
+    "jest": "^27.4.5",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "ts-loader": "^9.2.6",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.7.3",
+    "webpack": "^5.67.0",
+    "webpack-dev-middleware": "^5.3.0",
+    "webpack-hot-middleware": "^2.25.1",
+    "webpack-merge": "^5.8.0"
   }
 }

@@ -4,7 +4,11 @@ import { AppHandler } from './AppHandler';
 import { kResultInvalid, ResultErrors } from '../base/error';
 import { convertToAuthLevel } from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
-import { WebContentsServerImpl } from '../web/WebContentsServer';
+import {
+  WebContentsServerDevImpl,
+  // WebContentsServerDevImpl,
+  WebContentsServerImpl,
+} from '../web/WebContentsServer';
 
 //
 
@@ -295,7 +299,11 @@ export class AppExpress {
 
     // --------------------------
 
-    const webContentsServer = new WebContentsServerImpl();
+    // TODO: switch dev
+    // const webContentsServer = new WebContentsServerImpl();
+    const webContentsServer = new WebContentsServerDevImpl();
+
+    webContentsServer.middlewares().forEach((m) => app.use(m));
 
     app.get('/auth-portal/?*', (req, res, next) => {
       const session = extractUserSession(req.session);
