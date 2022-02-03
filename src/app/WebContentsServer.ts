@@ -1,8 +1,11 @@
+import * as Path from 'path';
 import * as Express from 'express';
 import * as WebpackDevMiddleware from 'webpack-dev-middleware';
 import * as WebpackHotMiddleware from 'webpack-hot-middleware';
 import * as webpackConfig from '../../webpack.config.js';
 import * as webpack from 'webpack';
+
+const webDirName = Path.resolve(__dirname + '/../web');
 
 interface WebContentsServer {
   middlewares: () => Array<Express.RequestHandler>;
@@ -26,11 +29,10 @@ export class WebContentsServerDevImpl implements WebContentsServer {
     res: Express.Response,
     next: Express.NextFunction
   ): void {
-    // TODO: remove symbolic link
     if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(__dirname + '/')(req, res, next);
+      Express.static(webDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(__dirname + '/auth-portal/loggedin.html');
+      res.sendFile(webDirName + '/auth-portal/loggedin.html');
     } else {
       next();
     }
@@ -41,9 +43,9 @@ export class WebContentsServerDevImpl implements WebContentsServer {
     next: Express.NextFunction
   ): void {
     if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(__dirname + '/')(req, res, next);
+      Express.static(webDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(__dirname + '/auth-portal/login.html');
+      res.sendFile(webDirName + '/auth-portal/login.html');
     } else {
       next();
     }
@@ -61,9 +63,9 @@ export class WebContentsServerImpl implements WebContentsServer {
   ): void {
     // TODO: remove symbolic link
     if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(__dirname + '/')(req, res, next);
+      Express.static(webDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(__dirname + '/auth-portal/loggedin.html');
+      res.sendFile(webDirName + '/auth-portal/loggedin.html');
     } else {
       next();
     }
@@ -74,9 +76,9 @@ export class WebContentsServerImpl implements WebContentsServer {
     next: Express.NextFunction
   ): void {
     if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(__dirname + '/')(req, res, next);
+      Express.static(webDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(__dirname + '/auth-portal/login.html');
+      res.sendFile(webDirName + '/auth-portal/login.html');
     } else {
       next();
     }

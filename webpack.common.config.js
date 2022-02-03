@@ -6,12 +6,12 @@ module.exports = {
   // mode: 'development',
   entry: {
     app: [
-      './src/web/app/a.ts',
+      './src/web/api.ts',
       'webpack-hot-middleware/client?reload=true&timeout=1000',
     ],
   },
   output: {
-    path: __dirname + '/src/html',
+    path: __dirname + '/src/web/auth-portal/',
     publicPath: '/auth-portal',
     filename: 'bundle.js',
   },
@@ -28,7 +28,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /src\/web\/app\/.*\.tsx?$/,
+        test: /src\/web\/.*\.tsx?$/,
         use: {
           loader: 'ts-loader',
           options: {

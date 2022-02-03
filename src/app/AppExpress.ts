@@ -8,7 +8,8 @@ import {
   WebContentsServerDevImpl,
   // WebContentsServerDevImpl,
   WebContentsServerImpl,
-} from '../web/WebContentsServer';
+} from './WebContentsServer';
+import { AppConfig } from './AppConfig';
 
 //
 
@@ -299,9 +300,10 @@ export class AppExpress {
 
     // --------------------------
 
-    // TODO: switch dev
-    // const webContentsServer = new WebContentsServerImpl();
-    const webContentsServer = new WebContentsServerDevImpl();
+    const webContentsServer =
+      AppConfig.frontend === 'webpack'
+        ? new WebContentsServerDevImpl()
+        : new WebContentsServerImpl();
 
     webContentsServer.middlewares().forEach((m) => app.use(m));
 

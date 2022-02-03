@@ -1,4 +1,4 @@
-import { AppConfig, importAppConfigFromEnv } from './AppConfig';
+import { AppConfig } from './AppConfig';
 import { AppExpress } from './AppExpress';
 import { AppHandler } from './AppHandler';
 import { ResourceProvider as ResourceManager } from './ResourceProvider';
@@ -77,7 +77,7 @@ export class AppMain {
   }
   start(): void {
     (async () => {
-      const config = importAppConfigFromEnv();
+      const config = AppConfig;
 
       const resource = await createResourceManagerAppImpl(config);
       const handler = new AppHandler(resource);
