@@ -1,9 +1,15 @@
-import { kResultForbidden, ResultErrors, ResultOk } from '../base/error';
+import {
+  kResultForbidden,
+  kResultInvalid,
+  ResultErrors,
+  ResultOk,
+} from '../base/error';
 import { ResourceProvider } from './ResourceProvider';
 import {
   AuthLevel,
   AuthLevelAdmin,
   isEditableAuthLevel,
+  isValidPassword,
   User,
 } from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
@@ -20,9 +26,18 @@ export class AppHandler {
     username: string,
     pass: string
   ): Promise<ResultOk | ResultErrors> {
+    // TODO: require info how to crypto
+    // TODO: pass ではなく、UserInputForVerify であるべき。
+    // パスワード以外の何かを要求することは少ないと推測。
+    // 現状のインターフェースでも影響は少なそう。
+    if (!isValidPassword(pass)) return kResultInvalid;
+    const userInputForVerify = {
+      pass,
+    };
+
     const res = await this.resource
       .getUserManager()
-      .testUser(username, pass, true);
+      .testUser(username, userInputForVerify);
     if (res.ok === false) {
       return res;
     }
@@ -69,16 +84,19 @@ export class AppHandler {
     username: string,
     level: AuthLevel
   ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors> {
+    // TODO: require info how to crypto
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
     }
     const res1 = await this.resource
       .getUserManager()
-      .addUser({ username, level });
-    if (!res1.ok) {
+      .addUser({ username, level }, { username });
+    if (res1.ok === false) {
       return res1;
     }
-    return { ok: true, otpauth_url: res1.otpauth_url };
+    // TODO: remove the dependency of otpauth
+    const otpauth_url = (res1.result as any).otpauth_url;
+    return { ok: true, otpauth_url };
   }
 
   async deleteUser(

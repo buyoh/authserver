@@ -2,8 +2,8 @@ import { PassCrypto, PassCryptoImpl } from './PassCryptoInterface';
 import * as Speakeasy from 'speakeasy'; // TODO: replace this module. not maintained
 import * as crypto from 'crypto';
 
-type OtpAuthCryptoSessionDataForGenerate = {};
-type OtpAuthCryptoClientDataForGenerate = {};
+// type OtpAuthCryptoSessionDataForGenerate = {};
+// type OtpAuthCryptoClientDataForGenerate = {};
 type OtpAuthCryptoUserInputForGenerate = {
   username: string;
 };
@@ -13,33 +13,29 @@ type OtpAuthCryptoSecretData = {
 type OtpAuthCryptoResultOfGenerate = {
   otpauth_url: string;
 };
-type OtpAuthCryptoSessionDataForVerify = {};
-type OtpAuthCryptoClientDataForVerify = {};
+// type OtpAuthCryptoSessionDataForVerify = {};
+// type OtpAuthCryptoClientDataForVerify = {};
 type OtpAuthCryptoUserInputForVerify = {
   pass: string;
 };
 
 const OtpAuthCryptoImpl: PassCryptoImpl<
-  OtpAuthCryptoSessionDataForGenerate,
-  OtpAuthCryptoClientDataForGenerate,
   OtpAuthCryptoUserInputForGenerate,
   OtpAuthCryptoSecretData,
   OtpAuthCryptoResultOfGenerate,
-  OtpAuthCryptoSessionDataForVerify,
-  OtpAuthCryptoClientDataForVerify,
   OtpAuthCryptoUserInputForVerify
 > = {
-  beginToGenerate():
-    | {
-        session: OtpAuthCryptoSessionDataForGenerate;
-        client: OtpAuthCryptoClientDataForGenerate;
-      }
-    | Error {
-    return { session: {}, client: {} };
-  },
+  // beginToGenerate():
+  //   | {
+  //       session: OtpAuthCryptoSessionDataForGenerate;
+  //       client: OtpAuthCryptoClientDataForGenerate;
+  //     }
+  //   | Error {
+  //   throw new Error('Method not implemented.');
+  // },
   generate(
-    session: OtpAuthCryptoSessionDataForGenerate,
-    client: OtpAuthCryptoClientDataForGenerate,
+    // session: OtpAuthCryptoSessionDataForGenerate,
+    // client: OtpAuthCryptoClientDataForGenerate,
     input: OtpAuthCryptoUserInputForGenerate
   ):
     | { secret: OtpAuthCryptoSecretData; result: OtpAuthCryptoResultOfGenerate }
@@ -53,18 +49,18 @@ const OtpAuthCryptoImpl: PassCryptoImpl<
       result: { otpauth_url: secret.otpauth_url },
     };
   },
-  beginToVerify():
-    | {
-        session: OtpAuthCryptoSessionDataForVerify;
-        client: OtpAuthCryptoClientDataForVerify;
-      }
-    | Error {
-    throw new Error('Method not implemented.');
-  },
+  // beginToVerify():
+  //   | {
+  //       session: OtpAuthCryptoSessionDataForVerify;
+  //       client: OtpAuthCryptoClientDataForVerify;
+  //     }
+  //   | Error {
+  //   throw new Error('Method not implemented.');
+  // },
   verify(
     secret: OtpAuthCryptoSecretData,
-    session: OtpAuthCryptoSessionDataForVerify,
-    client: OtpAuthCryptoSessionDataForVerify,
+    // session: OtpAuthCryptoSessionDataForVerify,
+    // client: OtpAuthCryptoClientDataForVerify,
     input: OtpAuthCryptoUserInputForVerify
   ): boolean {
     return Speakeasy.totp.verify({
@@ -75,32 +71,19 @@ const OtpAuthCryptoImpl: PassCryptoImpl<
   },
 };
 
-// any にしてしまったら意味が無い…
+// object にしてしまったら意味が無い…
 // ただクライアントとやりとりする間に型は失うので、どこまで型を引っ張るかは検討
 export const OtpAuthCrypto: PassCrypto = {
-  beginToGenerate: function (): Error | { session: any; client: any } {
-    return OtpAuthCryptoImpl.beginToGenerate();
-  },
   generate: function (
-    session: any,
-    client: any,
-    input: any
-  ): Error | { secret: any; result: any } {
-    const { username } = input;
+    input: object
+  ): Error | { secret: object; result: object } {
+    const { username } = input as any;
     if (typeof username !== 'string') return new Error();
     const newInput = { username };
-    return OtpAuthCryptoImpl.generate({}, {}, newInput);
+    return OtpAuthCryptoImpl.generate(newInput);
   },
-  beginToVerify: function (secret: any): Error | { session: any; client: any } {
-    return OtpAuthCryptoImpl.beginToVerify(secret);
-  },
-  verify: function (
-    secret: any,
-    session: any,
-    client: any,
-    input: any
-  ): boolean {
+  verify: function (secret: object, input: object): boolean {
     // TODO: validate
-    return OtpAuthCryptoImpl.verify(secret, session, client, input);
+    return OtpAuthCryptoImpl.verify(secret as any, input as any);
   },
 };

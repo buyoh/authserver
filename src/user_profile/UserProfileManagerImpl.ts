@@ -12,6 +12,7 @@ import {
   kResultInvalid,
   ResultErrors,
   kResultNotFound,
+  ResultInvalid,
 } from '../base/error';
 import { OtpAuthCrypto } from '../crypto/OtpAuthCrypto';
 import { UserProfileManager } from './UserProfileManager';
@@ -30,19 +31,19 @@ function isNeededPenalty(tryCount: number): null | number {
 
 export class UserProfileManagerImpl implements UserProfileManager {
   private passStorage: KeyValueStorage;
-  private passCrypto: PassCryptoProxy;
+  passCrypto: PassCryptoProxy;
   private testUserStartDate: number;
 
   constructor(passStorage: KeyValueStorage, passCrypto: PassCryptoProxy) {
-    // TODO: 抽象化 OtpAuthCrypto
     this.passStorage = passStorage;
     this.passCrypto = passCrypto;
     this.testUserStartDate = 0;
   }
 
   async addUser(
-    user: User
-  ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors> {
+    user: User,
+    userInputForGenerate: object
+  ): Promise<(ResultOk & { result: object }) | ResultErrors> {
     // TODO: return User
     // TODO: check valid user level
     const { username, level } = user;
@@ -56,12 +57,12 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
 
-    const res = this.passCrypto.generate({}, {}, { username });
+    // TODO: { ...userInputForGenerate, username }
+    // userInputForGenerate に username などの情報を取り込みたいことは想定される設計だが、
+    // どのタイミングで取り込むべき？引数や interface として User の枠を用意すべき？
+    const res = this.passCrypto.generate({ ...userInputForGenerate, username });
     if (res instanceof Error) return kResultInvalid;
-    const {
-      secret,
-      result: { otpauth_url },
-    } = res;
+    const { secret, result } = res;
 
     const res2 = await this.passStorage.insert(user.username, {
       username: user.username,
@@ -73,7 +74,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
     if (!res2.ok) {
       throw new Error('unexpected error: insert failed');
     }
-    return { ok: true, otpauth_url };
+    return { ok: true, result };
   }
 
   async getUser(username: string): Promise<(ResultOk & User) | ResultErrors> {
@@ -101,10 +102,13 @@ export class UserProfileManagerImpl implements UserProfileManager {
 
   async testUser(
     username: string,
-    pass: string,
-    incTryCount = true
-  ): Promise<(ResultOk & User) | ResultErrors> {
-    if (!isValudUsername(username) || !isValidPassword(pass)) {
+    userInputForVerify: object
+  ): Promise<(ResultOk & User) | (ResultInvalid & {})> {
+    // TODO: 試行回数を増加させないようなケースがある？
+    // 不要なら削除する
+    const incTryCount = true;
+
+    if (!isValudUsername(username)) {
       return kResultInvalid;
     }
 
@@ -147,9 +151,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
 
     const res3 = this.passCrypto.verify(
       { secret: resSecret },
-      {},
-      {},
-      { pass }
+      userInputForVerify
     );
     if (!res3) {
       if (incTryCount) {

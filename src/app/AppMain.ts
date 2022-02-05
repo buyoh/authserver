@@ -19,14 +19,18 @@ async function createAdminUser(
   userManager: UserProfileManager,
   adminUserName: string
 ): Promise<void> {
-  const res1 = await userManager.addUser({
-    username: adminUserName,
-    level: AuthLevelAdmin,
-  });
+  // TODO: need abstruct client crypto implementations.
+  const res1 = await userManager.addUser(
+    {
+      username: adminUserName,
+      level: AuthLevelAdmin,
+    },
+    { username: adminUserName }
+  );
   if (!res1.ok) {
-    console.log('already exists: ', adminUserName);
+    console.log('addUser failed. The user already may exists: ', adminUserName);
   } else {
-    console.log('user', adminUserName, 'pass:', res1.otpauth_url);
+    console.log('user', adminUserName, 'result:', res1.result);
   }
 }
 

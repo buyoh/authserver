@@ -1,4 +1,5 @@
-import { ResultOk, ResultErrors } from '../base/error';
+import { ResultOk, ResultErrors, ResultInvalid } from '../base/error';
+import { PassCryptoProxy } from '../crypto/PassCryptoProxy';
 import { User } from './UserProfile';
 
 //
@@ -17,8 +18,13 @@ export interface UserProfileManager {
    * @param {User} user
    */
   addUser(
-    user: User
-  ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors>;
+    user: User,
+    // TODO: 理想は、型があること
+    // 型をつけようとすると、PassCryptoの型は自分で決められないため、genericが必要になる。
+    // sessionDataForGenerate: object,
+    // clientDataForGenerate: object,
+    userInputForGenerate: object
+  ): Promise<(ResultOk & { result: object }) | ResultErrors>;
 
   /**
    * Get a user from username
@@ -34,19 +40,20 @@ export interface UserProfileManager {
    */
   allUsers(): Promise<(ResultOk & { data: Array<User> }) | ResultErrors>;
 
-  // TODO: 何故 incTryCount を引数として実装したか忘れた
   /**
    * Authorize a user
    * @param {string} username
    * @param {string} pass
-   * @param {boolean} incTryCount 試行回数を増加させるかどうか
-   * @return {}
+   * @return {} 成功以外は常に ResultInvalid を返す
    */
   testUser(
     username: string,
-    pass: string,
-    incTryCount: boolean
-  ): Promise<(ResultOk & User) | ResultErrors>;
+    // TODO: 理想は、型があること
+    // 型をつけようとすると、PassCryptoの型は自分で決められないため、genericが必要になる。
+    // sessionDataForVerify: object,
+    // clientDataForVerify: object,
+    userInputForVerify: object
+  ): Promise<(ResultOk & User) | ResultInvalid>;
 
   /**
    * Delete a user
@@ -54,4 +61,11 @@ export interface UserProfileManager {
    * @return {}
    */
   deleteUser(username: string): Promise<ResultOk | ResultErrors>;
+
+  // TODO: PassCryptoProxy はシングルトンの方が良いかもしれない…
+  /**
+   * get PassCrypto
+   * @return {}
+   */
+  get passCrypto(): PassCryptoProxy;
 }

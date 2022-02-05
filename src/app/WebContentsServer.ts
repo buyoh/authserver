@@ -15,7 +15,6 @@ interface WebContentsServer {
 
 export class WebContentsServerDevImpl implements WebContentsServer {
   middlewares(): Array<Express.RequestHandler> {
-    // webpackConfig.plugins.push(new webpack.HotModuleReplacementPlugin());
     const compiler = webpack(webpackConfig);
     return [
       WebpackDevMiddleware(compiler, {
