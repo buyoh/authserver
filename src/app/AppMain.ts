@@ -62,9 +62,6 @@ async function createResourceManagerAppImpl(): Promise<ResourceManagerAppImpl> {
 
   const passCrypto = new PassCryptoProxy('otpauth');
   const userManager = new UserProfileManagerImpl(passStorage, passCrypto);
-  // const passStorage = new VolatileStorage();
-  // passStorage.initialize();
-  // const userManager = new UserProfileManagerImpl(passStorage);
 
   await createAdminUser(userManager, AppConfig.adminUsername);
   return new ResourceManagerAppImpl(userManager);
@@ -78,10 +75,16 @@ export class AppMain {
   }
   start(): void {
     (async () => {
-      const resource = await createResourceManagerAppImpl();
-      const handler = new AppHandler(resource);
-      const express = new AppExpress(handler);
-      express.initialize();
+      let express = null as AppExpress | null;
+      try {
+        const resource = await createResourceManagerAppImpl();
+        const handler = new AppHandler(resource);
+        express = new AppExpress(handler);
+        express.initialize();
+      } catch (e) {
+        console.error(e);
+        process.exit(1);
+      }
       express.listen(AppConfig.port);
     })();
   }

@@ -41,7 +41,9 @@ export class AppUserSession {
 
   isLoggedIn(): boolean {
     return (
-      this.username && this.username.length >= 1 && this.level !== AuthLevelNone
+      typeof this.username === 'string' &&
+      this.username.length >= 1 &&
+      this.level !== AuthLevelNone
     );
   }
 

@@ -13,7 +13,7 @@ function fetchLogin(username, pass) {
 }
 
 function fetchLogout() {
-  return myfetch('/auth-portal/api/login', 'POST', {});
+  return myfetch('/auth-portal/api/logout', 'POST', {});
 }
 
 function fetchGetAllUser() {

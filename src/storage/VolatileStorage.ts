@@ -36,7 +36,7 @@ export class VolatileStorage implements KeyValueStorage {
     if (length === undefined) length = Object.keys(this.storage).length;
     const li = Object.entries(this.storage)
       .slice(offset, offset + length)
-      .map((kv) => ({ key: kv[0], data: kv[1] }));
+      .map((kv) => ({ key: kv[0], data: JSON.parse(kv[1]) }));
     return {
       ok: true,
       data: li,

@@ -104,6 +104,9 @@ export class AppExpress {
 
     if (app.get('env') !== 'production') {
       app.use((req, res, next) => {
+        if (req.hostname === 'localhost') {
+          console.warn('hostname === "localhost": Cookies might not work!');
+        }
         console.log(req.method, req.originalUrl);
         next();
       });
@@ -158,8 +161,6 @@ export class AppExpress {
         .logout(session)
         .then((res1) => {
           req.session.destroy((_err) => {
-            res.status(204); // no content
-            res.send();
             res.status(204); // no content
             res.send();
           });
