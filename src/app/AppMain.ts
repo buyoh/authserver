@@ -19,7 +19,6 @@ async function createAdminUser(
   userManager: UserProfileManager,
   adminUserName: string
 ): Promise<void> {
-  // const admin_username = process.env.ADMIN_USERNAME as string;
   const res1 = await userManager.addUser({
     username: adminUserName,
     level: AuthLevelAdmin,
@@ -43,17 +42,15 @@ class ResourceManagerAppImpl implements ResourceManager {
   }
 }
 
-async function createResourceManagerAppImpl(
-  config: AppConfig
-): Promise<ResourceManagerAppImpl> {
+async function createResourceManagerAppImpl(): Promise<ResourceManagerAppImpl> {
   // TODO: separeate Storage and Crypto, UserProfileManagerImpls
 
   const storageOptions = {
-    mongodbDomain: config.mongodbDomain,
+    mongodbDomain: AppConfig.mongodbDomain,
   };
 
   const passStorage = await createStorage(
-    config.storageType,
+    AppConfig.storageType,
     'authserver',
     'user',
     storageOptions
@@ -65,7 +62,7 @@ async function createResourceManagerAppImpl(
   // passStorage.initialize();
   // const userManager = new UserProfileManagerImpl(passStorage);
 
-  await createAdminUser(userManager, config.adminUsername);
+  await createAdminUser(userManager, AppConfig.adminUsername);
   return new ResourceManagerAppImpl(userManager);
 }
 
@@ -77,13 +74,11 @@ export class AppMain {
   }
   start(): void {
     (async () => {
-      const config = AppConfig;
-
-      const resource = await createResourceManagerAppImpl(config);
+      const resource = await createResourceManagerAppImpl();
       const handler = new AppHandler(resource);
       const express = new AppExpress(handler);
       express.initialize();
-      express.listen(config.port);
+      express.listen(AppConfig.port);
     })();
   }
 }
