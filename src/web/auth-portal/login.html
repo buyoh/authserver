@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/auth-portal/assets/style.css">
   <script src="/auth-portal/assets/api.js"></script>
-  <script src="/auth-portal/bundle.js"></script>
+  <!-- <script src="/auth-portal/bundle.js"></script> -->
   <title>Login</title>
 </head>
 
@@ -19,7 +19,8 @@
         <div>
           <input class="large spaced-block" type="text" name="username" placeholder="username" spellcheck="false"
             required="true" minlength="2" autocomplete="off" autocapitalize="off">
-          <input class="large spaced-block" type="text" name="pass" placeholder="onetime password">
+          <input class="large spaced-block" type="pass" name="pass" placeholder="onetime password"
+            autocomplete="hidden">
         </div>
         <button class="large block special" type="submit">login</button>
         <hr>
@@ -37,18 +38,24 @@
       const username = form.username.value;
       const pass = form.pass.value;
 
+      const [ok, res] = await login();
+      form.log.value = res;
+      if (ok) {
+        location.reload();
+      }
+    }
+
+    async function login() {
       const res1 = await fetchLogin(username, pass);
       if (400 <= res1.status && res1.status < 500) {
         const json = await res1.json();
-        form.log.value = json.detail ? json.detail : "bad request :(";
-        return;
+        return [false, json.detail ? json.detail : 'bad request :('];
+      } else if (200 <= res1.status && res1.status < 300) {
+        return [true, 'login ok'];
+      } else {
+        console.error(res1);
+        return [false, 'internal error'];
       }
-      if (200 <= res1.status && res1.status < 300) {
-        form.log.value = "reloading...";
-        location.reload();
-        return;
-      }
-      form.log.value = "internal error :(";
     }
     contentLoaded(() => {
     });

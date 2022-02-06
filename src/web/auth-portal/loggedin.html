@@ -66,23 +66,28 @@
       const form = document.getElementById('form-adduser');
       const username = form.user.value;
       const level = parseInt(form.level.value);
+
+      const [ok, res] = await addUser(username, level);
+      // if (ok)
+      form.log.value = res;
+    }
+
+    async function addUser(username, level) {
       if (username.length < 3)
-        return;
+        return [false, 'invalid arguments: username.length < 3'];
       const res = await fetchAddUser(username, level);
       if (!res.ok) {
         console.warn('fetch failed', res.status);
-        return;
+        return [false, 'fetch failed: '];
       }
-      const { ok, data } = await res.json();
+      const { ok, data, error } = await res.json();
       if (!ok) {
-        console.warn('ng');
-        return;
+        console.warn('server error');
+        return [false, 'server error' + JSON.stringify(error)];
       }
-      // const resUsername = data.username;
-      // const resLevel = data.level;
-      const resOtpauth = data.otpauth;
-      form.log.value = resOtpauth;
+      const resOtpauth = data.otpauth;  // TODO: 
       updateUserList();
+      return [true, JSON.stringify(resOtpauth)];
     }
 
     async function deleteUser(username) {
