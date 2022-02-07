@@ -21,6 +21,11 @@
             required="true" minlength="2" autocomplete="off" autocapitalize="off">
           <input class="large spaced-block" type="pass" name="pass" placeholder="onetime password"
             autocomplete="hidden">
+          <select class="large spaced-block" name="crypto">
+            <option value="pass" selected>pass</option>
+            <option value="otpauth">otpauth</option>
+            <option value="nopass">nopass</option>
+          </select>
         </div>
         <button class="large block special" type="submit">login</button>
         <hr>
@@ -37,16 +42,17 @@
       const form = event.target;
       const username = form.username.value;
       const pass = form.pass.value;
+      const crypto = form.crypto.value;
 
-      const [ok, res] = await login();
+      const [ok, res] = await login(username, pass, crypto);
       form.log.value = res;
       if (ok) {
         location.reload();
       }
     }
 
-    async function login() {
-      const res1 = await fetchLogin(username, pass);
+    async function login(username, pass, crypto) {
+      const res1 = await fetchLogin(username, pass, crypto);
       if (400 <= res1.status && res1.status < 500) {
         const json = await res1.json();
         return [false, json.detail ? json.detail : 'bad request :('];

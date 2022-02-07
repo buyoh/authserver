@@ -13,6 +13,7 @@ import {
   User,
 } from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
+import { PassCryptoMode } from '../crypto/PassCryptoProxy';
 
 export class AppHandler {
   private resource: ResourceProvider;
@@ -24,20 +25,23 @@ export class AppHandler {
   async login(
     session: AppUserSession,
     username: string,
-    pass: string
+    pass: string,
+    crypto: PassCryptoMode
   ): Promise<ResultOk | ResultErrors> {
+    // TODO: session 引数が参照渡しへの書き込みのために使っており、ナンセンス
     // TODO: require info how to crypto
     // TODO: pass ではなく、UserInputForVerify であるべき。
     // パスワード以外の何かを要求することは少ないと推測。
     // 現状のインターフェースでも影響は少なそう。
     if (!isValidPassword(pass)) return kResultInvalid;
     const userInputForVerify = {
+      username,
       pass,
     };
 
     const res = await this.resource
       .getUserManager()
-      .testUser(username, userInputForVerify);
+      .testUser(username, crypto, userInputForVerify);
     if (res.ok === false) {
       return res;
     }
@@ -82,6 +86,8 @@ export class AppHandler {
   async createUser(
     session: AppUserSession,
     username: string,
+    crypto: PassCryptoMode,
+    pass: string,
     level: AuthLevel
   ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors> {
     // TODO: require info how to crypto
@@ -90,7 +96,7 @@ export class AppHandler {
     }
     const res1 = await this.resource
       .getUserManager()
-      .addUser({ username, level }, { username });
+      .addUser({ username, level }, crypto, { username, pass });
     if (res1.ok === false) {
       return res1;
     }

@@ -52,5 +52,8 @@ export function isValudUsername(username: string): boolean {
 }
 
 export function isValidPassword(password: string): boolean {
-  return 5 <= password.length && password.length <= 200;
+  // TODO: refactoring
+  // crypto で対応するべきでは
+  return true;
+  // return 5 <= password.length && password.length <= 200;
 }

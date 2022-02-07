@@ -110,6 +110,10 @@ button.large {
   padding: 0.5em 2em;
 }
 
+select.large{
+  font-size: 2rem;
+}
+
 button.special {
   border: 2px solid #eee;
   background-color: #08f;

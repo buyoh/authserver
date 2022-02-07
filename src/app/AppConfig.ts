@@ -1,7 +1,10 @@
+import { PassCryptoMode } from '../crypto/PassCryptoProxy';
+
 export interface AppConfig {
   port: string;
   adminUsername: string;
   storageType: 'mongo' | 'memory';
+  passCryptoMode: PassCryptoMode;
   frontend: 'static' | 'webpack';
   mongodbDomain?: string;
 }
@@ -13,6 +16,12 @@ function importAppConfigFromEnvInternal(): AppConfig {
   const storageType = process.env.DBTYPE == 'memory' ? 'memory' : 'mongo';
   const frontend = process.env.FRONTEND == 'webpack' ? 'webpack' : 'static';
   const mongodbDomain = process.env.MONGODB_DOMAIN || undefined;
+  const passCryptoMode = // admin のみに使う。
+    process.env.PASSCRYPTO == 'otpauth'
+      ? 'otpauth'
+      : process.env.PASSCRYPTO == 'nopass'
+      ? 'nopass'
+      : 'pass';
 
   if (!adminUsername) {
     console.error('env.ADMIN_USERNAME is empty');
@@ -23,6 +32,7 @@ function importAppConfigFromEnvInternal(): AppConfig {
     adminUsername,
     port,
     storageType,
+    passCryptoMode,
     frontend,
     mongodbDomain,
   };

@@ -10,6 +10,7 @@ import {
   WebContentsServerImpl,
 } from './WebContentsServer';
 import { AppConfig } from './AppConfig';
+import { convertToPassCryptoMode } from '../crypto/PassCryptoProxy';
 
 //
 
@@ -129,14 +130,19 @@ export class AppExpress {
     app.post('/auth-portal/api/login', (req, res) => {
       const username = req.body.username;
       const pass = req.body.pass;
-      if (typeof username != 'string' || typeof pass != 'string') {
+      const crypto = convertToPassCryptoMode(req.body.crypto);
+      if (
+        typeof username != 'string' ||
+        typeof pass != 'string' ||
+        crypto === null
+      ) {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
       const session = extractUserSession(req.session);
 
       this.appHandler
-        .login(session, username, pass)
+        .login(session, username, pass, crypto)
         .then((res1) => {
           session.put(req.session);
           if (res1.ok === false) {
@@ -249,12 +255,14 @@ export class AppExpress {
       }
       const username = req.body.username;
       const level = convertToAuthLevel(parseInt(req.body.level));
-      if (typeof username != 'string' || level === null) {
+      const crypto = convertToPassCryptoMode(req.body.crypto);
+      const pass = typeof req.body.pass != 'string' ? '' : req.body.pass;
+      if (typeof username != 'string' || level === null || crypto === null) {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
       this.appHandler
-        .createUser(session, username, level)
+        .createUser(session, username, crypto, pass, level)
         .then((res1) => {
           if (res1.ok === false) {
             handleGenericError(req, res, res1);

@@ -1,5 +1,5 @@
 import { ResultOk, ResultErrors, ResultInvalid } from '../base/error';
-import { PassCryptoProxy } from '../crypto/PassCryptoProxy';
+import { PassCryptoMode } from '../crypto/PassCryptoProxy';
 import { User } from './UserProfile';
 
 //
@@ -19,6 +19,7 @@ export interface UserProfileManager {
    */
   addUser(
     user: User,
+    passCryptoMode: PassCryptoMode,
     // TODO: 理想は、型があること
     // 型をつけようとすると、PassCryptoの型は自分で決められないため、genericが必要になる。
     // sessionDataForGenerate: object,
@@ -48,6 +49,7 @@ export interface UserProfileManager {
    */
   testUser(
     username: string,
+    passCryptoMode: PassCryptoMode,
     // TODO: 理想は、型があること
     // 型をつけようとすると、PassCryptoの型は自分で決められないため、genericが必要になる。
     // sessionDataForVerify: object,
@@ -61,11 +63,4 @@ export interface UserProfileManager {
    * @return {}
    */
   deleteUser(username: string): Promise<ResultOk | ResultErrors>;
-
-  // TODO: PassCryptoProxy はシングルトンの方が良いかもしれない…
-  /**
-   * get PassCrypto
-   * @return {}
-   */
-  get passCrypto(): PassCryptoProxy;
 }

@@ -1,7 +1,7 @@
 import { KeyValueStorage } from '../storage/KeyValueStorageInterface';
 import {
+  AuthLevel,
   convertToAuthLevel,
-  isValidPassword,
   isValudUsername,
   kAuthPenaltySec,
   kMaxTryCount,
@@ -14,9 +14,41 @@ import {
   kResultNotFound,
   ResultInvalid,
 } from '../base/error';
-import { OtpAuthCrypto } from '../crypto/OtpAuthCrypto';
 import { UserProfileManager } from './UserProfileManager';
-import { PassCryptoProxy } from '../crypto/PassCryptoProxy';
+import {
+  getPassCryptoInstance,
+  PassCryptoMode,
+} from '../crypto/PassCryptoProxy';
+
+//
+
+// database に実際に格納するためのデータ
+// 型検査をするための wrapper
+type UserProfile = {
+  username: string;
+  passCryptoMode: string;
+  secret: any;
+  level: AuthLevel;
+  trycount: number;
+  startdate: number | undefined;
+};
+
+// TODO: classize as StorageWrapper
+function dbInsert(
+  passStorage: KeyValueStorage,
+  username: string,
+  profile: UserProfile
+) {
+  return passStorage.insert(username, profile);
+}
+
+function dbUpdate(
+  passStorage: KeyValueStorage,
+  username: string,
+  profile: UserProfile
+) {
+  return passStorage.update(username, profile);
+}
 
 //
 
@@ -29,19 +61,20 @@ function isNeededPenalty(tryCount: number): null | number {
   return Date.now() / 1000 + sec;
 }
 
+//
+
 export class UserProfileManagerImpl implements UserProfileManager {
   private passStorage: KeyValueStorage;
-  passCrypto: PassCryptoProxy;
   private testUserStartDate: number;
 
-  constructor(passStorage: KeyValueStorage, passCrypto: PassCryptoProxy) {
+  constructor(passStorage: KeyValueStorage) {
     this.passStorage = passStorage;
-    this.passCrypto = passCrypto;
     this.testUserStartDate = 0;
   }
 
   async addUser(
     user: User,
+    passCryptoMode: PassCryptoMode,
     userInputForGenerate: object
   ): Promise<(ResultOk & { result: object }) | ResultErrors> {
     // TODO: return User
@@ -60,12 +93,14 @@ export class UserProfileManagerImpl implements UserProfileManager {
     // TODO: { ...userInputForGenerate, username }
     // userInputForGenerate に username などの情報を取り込みたいことは想定される設計だが、
     // どのタイミングで取り込むべき？引数や interface として User の枠を用意すべき？
-    const res = this.passCrypto.generate({ ...userInputForGenerate, username });
+    const crypto = getPassCryptoInstance(passCryptoMode);
+    const res = crypto.generate({ ...userInputForGenerate, username });
     if (res instanceof Error) return kResultInvalid;
     const { secret, result } = res;
 
-    const res2 = await this.passStorage.insert(user.username, {
+    const res2 = await dbInsert(this.passStorage, user.username, {
       username: user.username,
+      passCryptoMode: passCryptoMode,
       secret,
       level,
       trycount: 0,
@@ -102,6 +137,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
 
   async testUser(
     username: string,
+    passCryptoMode: PassCryptoMode,
     userInputForVerify: object
   ): Promise<(ResultOk & User) | (ResultInvalid & {})> {
     // TODO: 試行回数を増加させないようなケースがある？
@@ -128,6 +164,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
     const resUsername = res1.data.username;
+    const resPassCryptoMode = res1.data.passCryptoMode;
     const resSecret = res1.data.secret;
     const resLevel = res1.data.level;
     const resTrycount = res1.data.trycount;
@@ -149,8 +186,25 @@ export class UserProfileManagerImpl implements UserProfileManager {
       );
     }
 
-    const res3 = this.passCrypto.verify(
-      { secret: resSecret },
+    if (passCryptoMode !== resPassCryptoMode) {
+      if (incTryCount) {
+        await this.setTryCount(
+          resUsername,
+          resSecret,
+          resPassCryptoMode,
+          resLevel,
+          resTrycount - 0 + 1
+        );
+      }
+      return kResultInvalid;
+    }
+
+    // TODO: { ...userInputForGenerate, username }
+    // userInputForGenerate に username などの情報を取り込みたいことは想定される設計だが、
+    // どのタイミングで取り込むべき？引数や interface として User の枠を用意すべき？
+    const crypto = getPassCryptoInstance(passCryptoMode);
+    const res3 = crypto.verify(
+      { ...resSecret, username: resUsername },
       userInputForVerify
     );
     if (!res3) {
@@ -158,6 +212,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
         await this.setTryCount(
           resUsername,
           resSecret,
+          resPassCryptoMode,
           resLevel,
           resTrycount - 0 + 1
         );
@@ -165,7 +220,13 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
     if (incTryCount && resTrycount) {
-      await this.setTryCount(resUsername, resSecret, resLevel, undefined);
+      await this.setTryCount(
+        resUsername,
+        resSecret,
+        resPassCryptoMode,
+        resLevel,
+        undefined
+      );
     }
     return {
       ok: true,
@@ -185,10 +246,12 @@ export class UserProfileManagerImpl implements UserProfileManager {
     return { ok: true };
   }
 
+  // TODO: pass UserStorage
   private async setTryCount(
     username: string,
     secret: string,
-    level: number,
+    passCryptoMode: string,
+    level: AuthLevel,
     nextTryCount: number | undefined
   ): Promise<ResultOk | ResultErrors> {
     if (!isValudUsername(username)) {
@@ -198,11 +261,12 @@ export class UserProfileManagerImpl implements UserProfileManager {
     const data = {
       username,
       secret,
+      passCryptoMode,
       level,
       trycount: nextTryCount,
       startdate: startdate ? startdate : undefined,
     };
-    const res1 = await this.passStorage.update(username, data);
+    const res1 = await dbUpdate(this.passStorage, username, data);
     if (!res1.ok) {
       throw new Error('unexpected error: ');
     }

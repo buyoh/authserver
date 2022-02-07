@@ -8,8 +8,8 @@ function myfetch(uri, method, json) {
   return fetch(uri, { method, body, headers });
 }
 
-function fetchLogin(username, pass) {
-  return myfetch('/auth-portal/api/login', 'POST', { username, pass });
+function fetchLogin(username, pass, crypto) {
+  return myfetch('/auth-portal/api/login', 'POST', { username, crypto, pass });
 }
 
 function fetchLogout() {
@@ -20,8 +20,13 @@ function fetchGetAllUser() {
   return fetch('/auth-portal/api/user');
 }
 
-function fetchAddUser(username, level) {
-  return myfetch('/auth-portal/api/user', 'POST', { username, level });
+function fetchAddUser(username, level, crypto, pass) {
+  return myfetch('/auth-portal/api/user', 'POST', {
+    username,
+    level,
+    crypto,
+    pass,
+  });
 }
 
 function fetchDeleteUser(username) {

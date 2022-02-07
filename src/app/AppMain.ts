@@ -6,7 +6,6 @@ import { createStorage } from '../storage/StorageBuilder';
 import { AuthLevelAdmin } from '../user_profile/UserProfile';
 import { UserProfileManager } from '../user_profile/UserProfileManager';
 import { UserProfileManagerImpl } from '../user_profile/UserProfileManagerImpl';
-import { PassCryptoProxy } from '../crypto/PassCryptoProxy';
 
 //
 
@@ -25,7 +24,8 @@ async function createAdminUser(
       username: adminUserName,
       level: AuthLevelAdmin,
     },
-    { username: adminUserName }
+    AppConfig.passCryptoMode,
+    { username: adminUserName, pass: 'root' }
   );
   if (!res1.ok) {
     console.log('addUser failed. The user already may exists: ', adminUserName);
@@ -55,13 +55,12 @@ async function createResourceManagerAppImpl(): Promise<ResourceManagerAppImpl> {
 
   const passStorage = await createStorage(
     AppConfig.storageType,
-    'authserver',
+    'authserver', // TODO: configure
     'user',
     storageOptions
   );
 
-  const passCrypto = new PassCryptoProxy('otpauth');
-  const userManager = new UserProfileManagerImpl(passStorage, passCrypto);
+  const userManager = new UserProfileManagerImpl(passStorage);
 
   await createAdminUser(userManager, AppConfig.adminUsername);
   return new ResourceManagerAppImpl(userManager);

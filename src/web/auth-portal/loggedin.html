@@ -49,6 +49,14 @@
             <option value="21" selected>member</option>
             <option value="11">manager</option>
           </select>
+          <select name="crypto">
+            <option value="pass" selected>pass</option>
+            <option value="otpauth">otpauth</option>
+            <option value="nopass">nopass</option>
+          </select>
+          <!-- TODO: Hide this input when otpauth or nopass is selected -->
+          <input type="password" name="pass" spellcheck="false" placeholder="pass/salt" minlength="2" autocomplete="off"
+            autocapitalize="off">
           <button type="submit">adduser</button>
           <pre><output class="highlight" name="log"></output></pre>
         </form>
@@ -66,16 +74,18 @@
       const form = document.getElementById('form-adduser');
       const username = form.user.value;
       const level = parseInt(form.level.value);
+      const crypto = form.crypto.value;
+      const pass = form.pass.value;
 
-      const [ok, res] = await addUser(username, level);
+      const [ok, res] = await addUser(username, level, crypto, pass);
       // if (ok)
       form.log.value = res;
     }
 
-    async function addUser(username, level) {
+    async function addUser(username, level, crypto, pass) {
       if (username.length < 3)
         return [false, 'invalid arguments: username.length < 3'];
-      const res = await fetchAddUser(username, level);
+      const res = await fetchAddUser(username, level, crypto, pass);
       if (!res.ok) {
         console.warn('fetch failed', res.status);
         return [false, 'fetch failed: '];
