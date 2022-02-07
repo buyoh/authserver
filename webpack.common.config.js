@@ -6,7 +6,7 @@ module.exports = {
   // mode: 'development',
   entry: {
     app: [
-      './src/web/api.ts',
+      __dirname + '/src/web/api.ts',
       'webpack-hot-middleware/client?reload=true&timeout=1000',
     ],
   },
@@ -17,9 +17,10 @@ module.exports = {
   },
   devServer: {
     static: {
-      directory: __dirname + '/public',
+      directory: __dirname + '/src/web/auth-portal/',
       publicPath: '/auth-portal',
     },
+    contentBase: __dirname + '/src/web/auth-portal/',
     port: 8020,
     historyApiFallback: {
       rewrites: [{ from: /./, to: '/auth-portal' }],
