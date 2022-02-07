@@ -60,8 +60,9 @@ export class WebContentsServerImpl implements WebContentsServer {
     res: Express.Response,
     next: Express.NextFunction
   ): void {
-    // TODO: remove symbolic link
-    if (req.path.startsWith('/auth-portal/assets/')) {
+    if (req.path.startsWith('/auth-portal/module/')) {
+      Express.static(webDirName + '/')(req, res, next);
+    } else if (req.path.startsWith('/auth-portal/assets/')) {
       Express.static(webDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
       res.sendFile(webDirName + '/auth-portal/loggedin.html');
@@ -74,7 +75,9 @@ export class WebContentsServerImpl implements WebContentsServer {
     res: Express.Response,
     next: Express.NextFunction
   ): void {
-    if (req.path.startsWith('/auth-portal/assets/')) {
+    if (req.path.startsWith('/auth-portal/module/')) {
+      Express.static(webDirName + '/')(req, res, next);
+    } else if (req.path.startsWith('/auth-portal/assets/')) {
       Express.static(webDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
       res.sendFile(webDirName + '/auth-portal/login.html');

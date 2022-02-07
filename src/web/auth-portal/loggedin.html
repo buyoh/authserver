@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/auth-portal/assets/style.css">
   <script src="/auth-portal/assets/api.js"></script>
+  <script src="/auth-portal/module/qrcode.js"></script>
   <title>user</title>
   <style>
     body {
@@ -43,22 +44,29 @@
       <section>
         <h2>add a new user account</h2>
         <form id="form-adduser" onsubmit="handleEvent_adduser_submit(event)">
-          <input type="text" name="user" spellcheck="false" required="true" placeholder="username" minlength="2"
-            autocomplete="off" autocapitalize="off">
-          <select name="level">
-            <option value="21" selected>member</option>
-            <option value="11">manager</option>
-          </select>
-          <select name="crypto">
-            <option value="pass" selected>pass</option>
-            <option value="otpauth">otpauth</option>
-            <option value="nopass">nopass</option>
-          </select>
-          <!-- TODO: Hide this input when otpauth or nopass is selected -->
-          <input type="password" name="pass" spellcheck="false" placeholder="pass/salt" minlength="2" autocomplete="off"
-            autocapitalize="off">
-          <button type="submit">adduser</button>
+          <div>
+            <input type="text" name="user" spellcheck="false" required="true" placeholder="username" minlength="2"
+              autocomplete="off" autocapitalize="off">
+            <select name="level">
+              <option value="21" selected>member</option>
+              <option value="11">manager</option>
+            </select>
+          </div>
+          <div>
+            <select name="crypto" onchange="handleEvent_crypto_change(event)">
+              <option value="pass" selected>pass</option>
+              <option value="otpauth">otpauth</option>
+              <option value="nopass">nopass</option>
+            </select>
+            <!-- TODO: Hide this input when otpauth or nopass is selected -->
+            <input type="password" name="pass" spellcheck="false" placeholder="pass/salt" minlength="2"
+              autocomplete="off" autocapitalize="off">
+          </div>
+          <div>
+            <button type="submit" class="special">adduser</button>
+          </div>
           <pre><output class="highlight" name="log"></output></pre>
+          <div id="output-adduser"></div>
         </form>
       </section>
     </div>
@@ -69,17 +77,59 @@
       await fetchLogout();
       location.reload();
     }
+
+    async function handleEvent_crypto_change(event) {
+      const form = document.getElementById('form-adduser');
+      const crypto = form.crypto.value;
+      if (crypto === 'pass') {
+        form.pass.style = '';
+      } else if (crypto === 'otpauth') {
+        form.pass.style = 'display: none';
+      } else if (crypto === 'nopass') {
+        form.pass.style = 'display: none';
+      }
+    }
+
     async function handleEvent_adduser_submit(event) {
       event.preventDefault();
       const form = document.getElementById('form-adduser');
       const username = form.user.value;
+
       const level = parseInt(form.level.value);
       const crypto = form.crypto.value;
       const pass = form.pass.value;
 
-      const [ok, res] = await addUser(username, level, crypto, pass);
-      // if (ok)
-      form.log.value = res;
+      const [ok, msg, data] = await addUser(username, level, crypto, pass);
+      if (ok) {
+        showResultOfAddUser(data);
+        form.user.value = '';
+        form.pass.value = '';
+      }
+      form.log.value = msg;
+    }
+
+    function showResultOfAddUser(data) {
+      const { username, level, crypto, result } = data;
+
+      const dom = document.getElementById('output-adduser');
+      dom.textContent = '';
+      const txt = document.createElement('pre');
+      txt.appendChild(document.createTextNode(`username="${username}", crypto="${crypto}"`));
+      dom.appendChild(txt);
+
+      if (crypto === 'pass') {
+        // show nothing
+      } else if (crypto === 'otpauth') {
+        console.log(result);
+        const canvas = document.createElement('canvas', { width: 320, height: 320 });
+        dom.appendChild(document.createTextNode('otpauth url:'));
+        dom.appendChild(canvas);
+        QRCode.toCanvas(canvas, result.otpauth_url, (err) => {
+          if (err) console.error(err);
+        });
+      } else if (crypto === 'nopass') {
+        // show nothing
+      }
     }
 
     async function addUser(username, level, crypto, pass) {
@@ -95,9 +145,8 @@
         console.warn('server error');
         return [false, 'server error' + JSON.stringify(error)];
       }
-      const resOtpauth = data.otpauth;  // TODO: 
       updateUserList();
-      return [true, JSON.stringify(resOtpauth)];
+      return [true, 'success!', data];
     }
 
     async function deleteUser(username) {
@@ -155,6 +204,7 @@
     }
     document.addEventListener('DOMContentLoaded', () => {
       updateUserList();
+      handleEvent_crypto_change(null);
     });
   </script>
 </body>

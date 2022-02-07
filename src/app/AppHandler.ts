@@ -89,7 +89,7 @@ export class AppHandler {
     crypto: PassCryptoMode,
     pass: string,
     level: AuthLevel
-  ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors> {
+  ): Promise<(ResultOk & { result: object; crypto: string }) | ResultErrors> {
     // TODO: require info how to crypto
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
@@ -101,8 +101,8 @@ export class AppHandler {
       return res1;
     }
     // TODO: remove the dependency of otpauth
-    const otpauth_url = (res1.result as any).otpauth_url;
-    return { ok: true, otpauth_url };
+    // const otpauth_url = (res1.result as any).otpauth_url;
+    return { ok: true, result: res1.result, crypto };
   }
 
   async deleteUser(

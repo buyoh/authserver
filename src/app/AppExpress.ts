@@ -274,7 +274,8 @@ export class AppExpress {
             data: {
               username,
               level,
-              otpauth: res1.otpauth_url,
+              crypto: res1.crypto,
+              result: res1.result,
             },
           });
         })
@@ -315,7 +316,6 @@ export class AppExpress {
         : new WebContentsServerImpl();
 
     webContentsServer.middlewares().forEach((m) => app.use(m));
-
     app.get('/auth-portal/?*', (req, res, next) => {
       const session = extractUserSession(req.session);
       if (session.isLoggedIn()) {
