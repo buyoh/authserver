@@ -62,8 +62,7 @@ export class VolatileStorage implements KeyValueStorage {
     return { ok: true };
   }
 
-  async erase(query: any): Promise<KeyValueStorageResult> {
-    const key = JSON.stringify(query);
+  async erase(key: string): Promise<KeyValueStorageResult> {
     delete this.storage[key];
     return { ok: true };
   }
