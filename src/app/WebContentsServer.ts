@@ -15,7 +15,7 @@ interface WebContentsServer {
 
 export class WebContentsServerDevImpl implements WebContentsServer {
   middlewares(): Array<Express.RequestHandler> {
-    const compiler = webpack(webpackConfig);
+    const compiler = webpack(webpackConfig as any);
     return [
       WebpackDevMiddleware(compiler, {
         publicPath: webpackConfig.output.publicPath,

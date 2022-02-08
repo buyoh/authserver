@@ -58,10 +58,10 @@ const OtpAuthCryptoImpl: PassCryptoImpl<
   //   throw new Error('Method not implemented.');
   // },
   verify(
-    secret: OtpAuthCryptoSecretData,
+    _secret: OtpAuthCryptoSecretData,
     // session: OtpAuthCryptoSessionDataForVerify,
     // client: OtpAuthCryptoClientDataForVerify,
-    input: OtpAuthCryptoUserInputForVerify
+    _input: OtpAuthCryptoUserInputForVerify
   ): boolean {
     return true;
     // return Speakeasy.totp.verify({

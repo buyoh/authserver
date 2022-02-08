@@ -13,6 +13,7 @@ import {
   ResultErrors,
   kResultNotFound,
   ResultInvalid,
+  kResultInternalError,
 } from '../base/error';
 import { UserProfileManager } from './UserProfileManager';
 import {
@@ -95,7 +96,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
     // どのタイミングで取り込むべき？引数や interface として User の枠を用意すべき？
     const crypto = getPassCryptoInstance(passCryptoMode);
     const res = crypto.generate({ ...userInputForGenerate, username });
-    if (res instanceof Error) return kResultInvalid;
+    if (res instanceof Error) return { ...kResultInvalid, detail: res.message };
     const { secret, result } = res;
 
     const res2 = await dbInsert(this.passStorage, user.username, {
@@ -107,7 +108,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       startdate: undefined,
     });
     if (!res2.ok) {
-      throw new Error('unexpected error: insert failed');
+      return { ...kResultInternalError, detail: 'addUser failed. Try again' };
     }
     return { ok: true, result };
   }
@@ -126,7 +127,8 @@ export class UserProfileManagerImpl implements UserProfileManager {
   async allUsers(): Promise<(ResultOk & { data: Array<User> }) | ResultErrors> {
     const res = await this.passStorage.all();
     if (!res.ok) {
-      throw new Error('unexpected error: ');
+      console.error('unexpected error', res);
+      return kResultInternalError;
     }
     const li = res.data.map((raw) => ({
       username: raw.data.username,
@@ -171,11 +173,13 @@ export class UserProfileManagerImpl implements UserProfileManager {
     const resStartDate = res1.data.startdate;
 
     if (typeof resUsername != 'string' || resUsername != username) {
-      throw new Error('unexpected error: invalid DB username');
+      console.error('unexpected error: invalid DB username');
+      return kResultInvalid;
     }
     const level = convertToAuthLevel(resLevel);
     if (level === null || !resSecret) {
-      throw new Error('unexpected error: invalid DB level');
+      console.error('unexpected error: invalid DB level');
+      return kResultInvalid;
     }
 
     if (resStartDate && now < resStartDate) {
@@ -240,9 +244,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
     const res1 = await this.passStorage.erase(username);
-    if (!res1.ok) {
-      throw new Error('unexpected error: ');
-    }
+    if (res1.ok === false) return { ok: false, result: res1.result };
     return { ok: true };
   }
 
@@ -267,9 +269,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       startdate: startdate ? startdate : undefined,
     };
     const res1 = await dbUpdate(this.passStorage, username, data);
-    if (!res1.ok) {
-      throw new Error('unexpected error: ');
-    }
+    if (res1.ok === false) return { ok: false, result: res1.result };
     return { ok: true };
   }
 }

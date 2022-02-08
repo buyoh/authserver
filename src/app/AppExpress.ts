@@ -65,6 +65,9 @@ function handleGenericError(
   } else if (error.result === 'notfound') {
     res.status(404);
     res.json(data);
+  } else if (error.result === 'error') {
+    res.status(503);
+    res.json(data);
   } else {
     handleInternalError(req, res, error);
   }
