@@ -9,7 +9,6 @@ import {
   AuthLevel,
   AuthLevelAdmin,
   isEditableAuthLevel,
-  isValidPassword,
   User,
 } from '../user_profile/UserProfile';
 import { AppUserSession } from './AppUserSession';
@@ -33,7 +32,6 @@ export class AppHandler {
     // TODO: pass ではなく、UserInputForVerify であるべき。
     // パスワード以外の何かを要求することは少ないと推測。
     // 現状のインターフェースでも影響は少なそう。
-    if (!isValidPassword(pass)) return kResultInvalid;
     const userInputForVerify = {
       username,
       pass,

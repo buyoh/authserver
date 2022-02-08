@@ -15,6 +15,10 @@ type SimplePassCryptoUserInputForVerify = {
   pass: string;
 };
 
+export function isValidPassword(password: string): boolean {
+  return 5 <= password.length && password.length <= 200;
+}
+
 const SimplePassCryptoImpl: PassCryptoImpl<
   SimplePassCryptoUserInputForGenerate,
   SimplePassCryptoSecretData,
@@ -27,7 +31,7 @@ const SimplePassCryptoImpl: PassCryptoImpl<
         result: SimplePassCryptoResultOfGenerate;
       }
     | Error {
-    if (input.pass === '') return new Error('pass is empty');
+    if (isValidPassword(input.pass)) return new Error('pass is invalid');
     // TODO: support async!
     const salt = randomBytes(64);
     const hash = scryptSync(

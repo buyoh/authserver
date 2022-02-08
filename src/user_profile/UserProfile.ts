@@ -50,10 +50,3 @@ export function isEditableAuthLevel(me: AuthLevel, target: AuthLevel): boolean {
 export function isValudUsername(username: string): boolean {
   return /^[a-zA-Z0-9_-]{2,20}$/.test(username);
 }
-
-export function isValidPassword(password: string): boolean {
-  // TODO: refactoring
-  // crypto で対応するべきでは
-  return true;
-  // return 5 <= password.length && password.length <= 200;
-}
