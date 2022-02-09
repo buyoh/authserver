@@ -36,6 +36,8 @@ docker-compose down --rmi all --volumes --remove-orphans
 
 ## testing
 
+TODO: FIXME: obsolated!!!
+
 ```
 # terminal 1
 yarn
