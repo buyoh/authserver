@@ -12,48 +12,30 @@ import {
 
 //
 
-export class AppUserSession {
-  username: string | null;
-  level: AuthLevel;
+export interface AppUserSession {
+  readonly username: string | null;
+  readonly level: AuthLevel;
+}
 
-  constructor(a: any) {
-    if (!a || a.username === undefined || a.level === undefined) {
-      this.setInvalid();
-      return;
-    }
-    const { username, level } = a;
-    if (!isValudUsername(username)) {
-      this.setInvalid();
-      return;
-    }
-    const convertedLevel = convertToAuthLevel(level);
-    if (convertedLevel === null) {
-      this.setInvalid();
-      return;
-    }
-    this.username = username;
-    this.level = convertedLevel;
-  }
+export const kInvalidAppUserSession: AppUserSession = {
+  username: null,
+  level: AuthLevelNone,
+};
 
-  static createEmpty(): AppUserSession {
-    return new AppUserSession(null);
-  }
+export function isLoggedIn(session: AppUserSession): boolean {
+  return (
+    typeof session.username === 'string' &&
+    session.username.length >= 1 &&
+    session.level !== AuthLevelNone
+  );
+}
 
-  isLoggedIn(): boolean {
-    return (
-      typeof this.username === 'string' &&
-      this.username.length >= 1 &&
-      this.level !== AuthLevelNone
-    );
-  }
-
-  put(a: any): void {
-    a.username = this.username;
-    a.level = this.level;
-  }
-
-  setInvalid(): void {
-    this.username = null;
-    this.level = AuthLevelNone;
-  }
+export function validateAppUserSession(a: any) {
+  if (!a || a.username === undefined || a.level === undefined)
+    return { ...kInvalidAppUserSession };
+  const { username, level } = a;
+  if (!isValudUsername(username)) return { ...kInvalidAppUserSession };
+  const convertedLevel = convertToAuthLevel(level);
+  if (convertedLevel === null) return { ...kInvalidAppUserSession };
+  return { username, level: convertedLevel };
 }

@@ -11,7 +11,7 @@ import {
   isEditableAuthLevel,
   User,
 } from '../user_profile/UserProfile';
-import { AppUserSession } from './AppUserSession';
+import { AppUserSession, kInvalidAppUserSession } from './AppUserSession';
 import { PassCryptoMode } from '../crypto/PassCryptoProxy';
 
 export class AppHandler {
@@ -26,9 +26,7 @@ export class AppHandler {
     username: string,
     pass: string,
     crypto: PassCryptoMode
-  ): Promise<ResultOk | ResultErrors> {
-    // TODO: session 引数が参照渡しへの書き込みのために使っており、ナンセンス
-    // TODO: require info how to crypto
+  ): Promise<(ResultOk | ResultErrors) & { session: AppUserSession }> {
     // TODO: pass ではなく、UserInputForVerify であるべき。
     // パスワード以外の何かを要求することは少ないと推測。
     // 現状のインターフェースでも影響は少なそう。
@@ -41,15 +39,12 @@ export class AppHandler {
       .getUserManager()
       .testUser(username, crypto, userInputForVerify);
     if (res.ok === false) {
-      return res;
+      return { ...res, session: { ...session } };
     }
-    session.username = res.username;
-    session.level = res.level;
-    return { ok: true };
+    return { ok: true, session: { username: res.username, level: res.level } };
   }
 
-  async logout(session: AppUserSession): Promise<ResultOk | ResultErrors> {
-    session.setInvalid();
+  async loggedout(_session: AppUserSession): Promise<ResultOk | ResultErrors> {
     return { ok: true };
   }
 
@@ -88,7 +83,6 @@ export class AppHandler {
     pass: string,
     level: AuthLevel
   ): Promise<(ResultOk & { result: object; crypto: string }) | ResultErrors> {
-    // TODO: require info how to crypto
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
     }
@@ -98,8 +92,6 @@ export class AppHandler {
     if (res1.ok === false) {
       return res1;
     }
-    // TODO: remove the dependency of otpauth
-    // const otpauth_url = (res1.result as any).otpauth_url;
     return { ok: true, result: res1.result, crypto };
   }
 

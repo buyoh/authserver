@@ -3,10 +3,9 @@ import * as ExpressSession from 'express-session';
 import { AppHandler } from './AppHandler';
 import { kResultInvalid, ResultErrors } from '../base/error';
 import { convertToAuthLevel } from '../user_profile/UserProfile';
-import { AppUserSession } from './AppUserSession';
+import { isLoggedIn, validateAppUserSession } from './AppUserSession';
 import {
   WebContentsServerDevImpl,
-  // WebContentsServerDevImpl,
   WebContentsServerImpl,
 } from './WebContentsServer';
 import { AppConfig } from './AppConfig';
@@ -36,12 +35,6 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: true,
 };
-
-//
-
-function extractUserSession(a: any): AppUserSession {
-  return new AppUserSession(a);
-}
 
 //
 
@@ -119,8 +112,8 @@ export class AppExpress {
     app.get('/auth', (req, res) => {
       // check the session.
       // bodyless response
-      const session = extractUserSession(req.session);
-      if (session.isLoggedIn()) {
+      const session = validateAppUserSession(req.session);
+      if (isLoggedIn(session)) {
         res.status(204); // no content
         res.send();
       } else {
@@ -142,19 +135,17 @@ export class AppExpress {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
-      const session = extractUserSession(req.session);
+      const prevSession = validateAppUserSession(req.session);
 
       this.appHandler
-        .login(session, username, pass, crypto)
+        .login(prevSession, username, pass, crypto)
         .then((res1) => {
-          session.put(req.session);
           if (res1.ok === false) {
             handleGenericError(req, res, res1);
             return;
           }
           req.session.regenerate((_err) => {
-            // session is updated by appHandler.login
-            session.put(req.session);
+            Object.assign(req.session, res1.session);
             res.status(204); // no content
             res.send();
           });
@@ -165,10 +156,12 @@ export class AppExpress {
     //
 
     app.post('/auth-portal/api/logout', (req, res) => {
-      const session = extractUserSession(req.session);
+      const prevSession = validateAppUserSession(req.session);
       this.appHandler
-        .logout(session)
+        .loggedout(prevSession)
         .then((res1) => {
+          // There is no reason for canceling destroying sessions
+          // if (res1.ok === false);
           req.session.destroy((_err) => {
             res.status(204); // no content
             res.send();
@@ -180,9 +173,8 @@ export class AppExpress {
     // --------------------------
 
     app.get('/auth-portal/api/me', (req, res) => {
-      // check the session.
-      const session = extractUserSession(req.session);
-      if (!session.isLoggedIn()) {
+      const session = validateAppUserSession(req.session);
+      if (!isLoggedIn(session)) {
         handleUnauthorized(res);
       } else {
         res.status(200);
@@ -195,8 +187,8 @@ export class AppExpress {
 
     app.get('/auth-portal/api/user/:username', (req, res) => {
       const { username } = req.params;
-      const session = extractUserSession(req.session);
-      if (!session.isLoggedIn()) {
+      const session = validateAppUserSession(req.session);
+      if (!isLoggedIn(session)) {
         handleUnauthorized(res);
         return;
       }
@@ -223,8 +215,8 @@ export class AppExpress {
     //
 
     app.get('/auth-portal/api/user', (req, res) => {
-      const session = extractUserSession(req.session);
-      if (!session.isLoggedIn()) {
+      const session = validateAppUserSession(req.session);
+      if (!isLoggedIn(session)) {
         handleUnauthorized(res);
         return;
       }
@@ -251,8 +243,8 @@ export class AppExpress {
     //
 
     app.post('/auth-portal/api/user', (req, res) => {
-      const session = extractUserSession(req.session);
-      if (!session.isLoggedIn()) {
+      const session = validateAppUserSession(req.session);
+      if (!isLoggedIn(session)) {
         handleUnauthorized(res);
         return;
       }
@@ -289,8 +281,8 @@ export class AppExpress {
 
     app.delete('/auth-portal/api/user/:username', (req, res) => {
       const { username } = req.params;
-      const session = extractUserSession(req.session);
-      if (!session.isLoggedIn()) {
+      const session = validateAppUserSession(req.session);
+      if (!isLoggedIn(session)) {
         handleUnauthorized(res);
         return;
       }
@@ -320,8 +312,8 @@ export class AppExpress {
 
     webContentsServer.middlewares().forEach((m) => app.use(m));
     app.get('/auth-portal/?*', (req, res, next) => {
-      const session = extractUserSession(req.session);
-      if (session.isLoggedIn()) {
+      const session = validateAppUserSession(req.session);
+      if (isLoggedIn(session)) {
         webContentsServer.responseLoggedIn(req, res, next);
       } else {
         webContentsServer.responseNonLoggedIn(req, res, next);

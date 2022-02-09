@@ -78,6 +78,4 @@ function importAppConfigFromEnvInternal(): AppConfig {
   };
 }
 
-// TODO: 現状は AppMain にのみ依存されるようになっているが、
-// appからであれば、どこからでも依存されても良いように、ルールを変える。
 export const AppConfig = importAppConfigFromEnvInternal();
