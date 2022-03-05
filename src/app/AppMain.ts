@@ -14,18 +14,16 @@ import { UserProfileManagerImpl } from '../user_profile/UserProfileManagerImpl';
 
 //
 
-async function createAdminUser(
-  userManager: UserProfileManager,
-  adminUserName: string
-): Promise<void> {
+async function createAdminUser(userManager: UserProfileManager): Promise<void> {
   // TODO: need abstruct client crypto implementations.
+  const adminUserName = AppConfig.adminUserName;
   const res1 = await userManager.addUser(
     {
       username: adminUserName,
       level: AuthLevelAdmin,
     },
     AppConfig.passCryptoMode,
-    { username: adminUserName, pass: 'root' }
+    { username: adminUserName, pass: AppConfig.adminUserPass }
   );
   if (!res1.ok) {
     console.log('addUser failed. The user already may exists: ', adminUserName);
@@ -53,16 +51,16 @@ async function createResourceManagerAppImpl(): Promise<ResourceManagerAppImpl> {
     mongodbDomain: AppConfig.mongodbDomain,
   };
 
-  const passStorage = await createStorage(
+  const userStorage = await createStorage(
     AppConfig.storageType,
-    'authserver', // TODO: configure
+    AppConfig.storageDbName,
     'user',
     storageOptions
   );
 
-  const userManager = new UserProfileManagerImpl(passStorage);
+  const userManager = new UserProfileManagerImpl(userStorage);
 
-  await createAdminUser(userManager, AppConfig.adminUsername);
+  await createAdminUser(userManager);
   return new ResourceManagerAppImpl(userManager);
 }
 

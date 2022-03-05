@@ -21,7 +21,7 @@ import { convertToPassCryptoMode } from '../crypto/PassCryptoProxy';
 //
 
 const sessionConfig = {
-  secret: 'everythings_are_omochi',
+  secret: AppConfig.sessionSecret,
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7,
     // expires: Date,
@@ -30,7 +30,7 @@ const sessionConfig = {
     httpOnly: false,
     path: '/',
     // NOTE: domain must have one or more '.'. e.g., 'localhost' doesn't work.
-    domain: 'app.localhost',
+    domain: AppConfig.domain,
   },
   resave: false,
   saveUninitialized: true,
