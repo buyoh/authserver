@@ -113,7 +113,7 @@ export class MongoStorage implements KeyValueStorage {
     }
     const res = await this.collection.updateOne(
       { id: key },
-      { id: key, ...data },
+      { $set: { id: key, ...data } },
       { upsert: false }
     );
     if (!res.acknowledged) {
