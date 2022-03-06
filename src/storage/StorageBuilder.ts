@@ -36,9 +36,11 @@ export async function createStorage(
   let selectedDbImpl = 'memory';
   if (dbImplType === 'mongo') selectedDbImpl = 'mongo';
 
-  if (selectedDbImpl === 'memory') {
-    return await createVolatileStorage(dbName + '@' + collectionName);
-  } else if (selectedDbImpl === 'mongo') {
+  if (selectedDbImpl === 'mongo') {
     return await createMongoStorage(dbName, collectionName, option);
+  } else {
+    // (selectedDbImpl === 'memory')
+    // default
+    return await createVolatileStorage(dbName + '@' + collectionName);
   }
 }

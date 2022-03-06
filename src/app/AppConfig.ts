@@ -4,13 +4,13 @@ import yargs from 'yargs';
 export interface AppConfig {
   port: string;
   domain: string;
-  adminUserName: string | null;
-  adminUserPass: string | null;
+  adminUserName: string;
+  adminUserPass: string | undefined;
   storageType: 'mongo' | 'memory';
   storageDbName: string;
   passCryptoMode: PassCryptoMode;
   frontend: 'static' | 'webpack';
-  mongodbDomain: string | null;
+  mongodbDomain: string | undefined;
   sessionSecret: string;
 }
 
@@ -88,7 +88,7 @@ function importAppConfigFromEnvInternal(): AppConfig {
       default: 'everything_is_omochi',
       type: 'string',
     })
-    .help().argv;
+    .help().argv as any; // TODO: remove any
 
   const port = argv['port'] || '8888';
   const domain = argv['domain'] || 'app.localhost';
@@ -106,7 +106,7 @@ function importAppConfigFromEnvInternal(): AppConfig {
 
   const storageType = argv['storage'] == 'memory' ? 'memory' : 'mongo';
   const storageDbName = argv['storage-dbname'] || 'authserver';
-  const mongodbDomain = argv['mongodb-domain'] || null;
+  const mongodbDomain = argv['mongodb-domain'] || undefined;
   const sessionSecret = argv['session-secret'] || 'everything_is_omochi';
 
   return {

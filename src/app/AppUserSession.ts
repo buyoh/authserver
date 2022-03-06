@@ -36,6 +36,6 @@ export function validateAppUserSession(a: any) {
   const { username, level } = a;
   if (!isValudUsername(username)) return { ...kInvalidAppUserSession };
   const convertedLevel = convertToAuthLevel(level);
-  if (convertedLevel === null) return { ...kInvalidAppUserSession };
+  if (convertedLevel === undefined) return { ...kInvalidAppUserSession };
   return { username, level: convertedLevel };
 }

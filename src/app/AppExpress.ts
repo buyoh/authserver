@@ -1,7 +1,11 @@
-import * as Express from 'express';
-import * as ExpressSession from 'express-session';
+import Express from 'express';
+import ExpressSession from 'express-session';
 import { AppHandler } from './AppHandler';
-import { kResultInvalid, ResultErrors } from '../base/error';
+import {
+  kResultInternalError,
+  kResultInvalid,
+  ResultErrors,
+} from '../base/error';
 import { convertToAuthLevel } from '../user_profile/UserProfile';
 import { isLoggedIn, validateAppUserSession } from './AppUserSession';
 import {
@@ -144,6 +148,10 @@ export class AppExpress {
             handleGenericError(req, res, res1);
             return;
           }
+          if (req.session === undefined) {
+            handleGenericError(req, res, kResultInternalError);
+            return;
+          }
           req.session.regenerate((_err) => {
             Object.assign(req.session, res1.session);
             res.status(204); // no content
@@ -162,6 +170,11 @@ export class AppExpress {
         .then((res1) => {
           // There is no reason for canceling destroying sessions
           // if (res1.ok === false);
+          if (req.session === undefined) {
+            res.status(204); // no content
+            res.send();
+            return;
+          }
           req.session.destroy((_err) => {
             res.status(204); // no content
             res.send();
@@ -252,7 +265,11 @@ export class AppExpress {
       const level = convertToAuthLevel(parseInt(req.body.level));
       const crypto = convertToPassCryptoMode(req.body.crypto);
       const pass = typeof req.body.pass != 'string' ? '' : req.body.pass;
-      if (typeof username != 'string' || level === null || crypto === null) {
+      if (
+        typeof username != 'string' ||
+        level === undefined ||
+        crypto === null
+      ) {
         handleGenericError(req, res, kResultInvalid);
         return;
       }

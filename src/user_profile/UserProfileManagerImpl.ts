@@ -30,7 +30,7 @@ type UserProfile = {
   passCryptoMode: string;
   secret: any;
   level: AuthLevel;
-  trycount: number;
+  trycount: number | undefined;
   startdate: number | undefined;
 };
 
@@ -177,7 +177,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
     const level = convertToAuthLevel(resLevel);
-    if (level === null || !resSecret) {
+    if (level === undefined || !resSecret) {
       console.error('unexpected error: invalid DB level');
       return kResultInvalid;
     }

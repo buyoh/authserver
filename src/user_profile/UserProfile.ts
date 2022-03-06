@@ -30,11 +30,13 @@ export interface User {
 
 //
 
-export function convertToAuthLevel(maybeLevel: any): null | AuthLevel {
+export function convertToAuthLevel(maybeLevel: any): undefined | AuthLevel {
   if (typeof maybeLevel != 'number') return;
-  return [AuthLevelAdmin, AuthLevelMember, AuthLevelNone].find(
-    (e) => e === maybeLevel
-  ) as AuthLevel;
+  return [
+    AuthLevelAdmin as AuthLevel,
+    AuthLevelMember as AuthLevel,
+    AuthLevelNone as AuthLevel,
+  ].find((e) => e === maybeLevel);
 }
 
 export function isEditableAuthLevel(me: AuthLevel, target: AuthLevel): boolean {

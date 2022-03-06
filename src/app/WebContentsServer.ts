@@ -1,9 +1,11 @@
-import * as Path from 'path';
-import * as Express from 'express';
-import * as WebpackDevMiddleware from 'webpack-dev-middleware';
-import * as WebpackHotMiddleware from 'webpack-hot-middleware';
+import Path from 'path';
+import Express from 'express';
+// TODO: move to devDependencies (maybe impossible)
+import WebpackDevMiddleware from 'webpack-dev-middleware';
+import WebpackHotMiddleware from 'webpack-hot-middleware';
+//@ts-ignore
 import * as webpackConfig from '../../webpack.config.js';
-import * as webpack from 'webpack';
+import webpack from 'webpack';
 
 const webDirName = Path.resolve(__dirname + '/../web');
 

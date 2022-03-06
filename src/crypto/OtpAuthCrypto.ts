@@ -44,6 +44,8 @@ const OtpAuthCryptoImpl: PassCryptoImpl<
       length: 32,
       name: crypto.randomUUID() + ':' + input.username,
     });
+    // TODO: otpauth_url === undefined になり得るかどうか
+    if (secret.otpauth_url === undefined) throw Error('crypto error');
     return {
       secret: { secret: secret.base32 },
       result: { otpauth_url: secret.otpauth_url },
