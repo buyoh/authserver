@@ -22,7 +22,7 @@ export class WebContentsServerDevImpl implements WebContentsServer {
       WebpackDevMiddleware(compiler, {
         publicPath: webpackConfig.output.publicPath,
       }),
-      WebpackHotMiddleware(compiler),
+      // WebpackHotMiddleware(compiler),  // TODO:
     ];
   }
   responseLoggedIn(
