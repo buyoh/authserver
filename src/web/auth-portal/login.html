@@ -47,7 +47,14 @@
       const [ok, res] = await login(username, pass, crypto);
       form.log.value = res;
       if (ok) {
-        location.reload();
+        const param = (new URL(document.location)).searchParams;
+        const refferer_uri = param.get('login');
+        if (refferer_uri) {
+          param.delete('login');
+          location.href = location.origin + '/' + refferer_uri.substring(1) + '?' + param.toString();
+        } else {
+          location.reload();
+        }
       }
     }
 
