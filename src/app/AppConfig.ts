@@ -41,9 +41,6 @@ function importAppConfigFromEnvInternal(): AppConfig {
       description:
         // 'Specify the administrator. The administrator user will be created if it does not exist.',
         'Create the administrator if it does not exist',
-      // TODO: admin は指定されたアカウントだけ有効、としたい
-      // 現在の実装では、自身のアカウントを削除できず、かつ同じ権限のアカウントも削除できないため、
-      // うまく動かない。
       // requiresArg: true,
       type: 'string',
     })
@@ -51,12 +48,12 @@ function importAppConfigFromEnvInternal(): AppConfig {
     .option('create-user-admin-password', {
       description:
         // 'Specify the administrator. The administrator user will be created if it does not exist.',
-        'Create the administrator with the password if it does not exist',
+        'The password for the administrator',
       default: 'root',
       type: 'string',
     })
     .option('create-user-admin-crypto', {
-      description: 'Crypto type to be used when administrator will be created',
+      description: 'Crypto type to be used for the administrator',
       choices: ['otpauth', 'pass', 'nopass'],
       default: 'otpauth',
       type: 'string',

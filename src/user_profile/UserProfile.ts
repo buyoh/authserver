@@ -34,6 +34,7 @@ export function convertToAuthLevel(maybeLevel: any): undefined | AuthLevel {
   if (typeof maybeLevel != 'number') return;
   return [
     AuthLevelAdmin as AuthLevel,
+    AuthLevelManager as AuthLevel,
     AuthLevelMember as AuthLevel,
     AuthLevelNone as AuthLevel,
   ].find((e) => e === maybeLevel);

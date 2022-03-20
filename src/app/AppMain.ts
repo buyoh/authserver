@@ -1,7 +1,7 @@
 import { AppConfig } from './AppConfig';
 import { AppExpress } from './AppExpress';
 import { AppHandler } from './AppHandler';
-import { ResourceProvider as ResourceManager } from './ResourceProvider';
+import { ResourceProvider } from './ResourceProvider'; // TODO: FIX
 import { createStorage } from '../storage/StorageBuilder';
 import { AuthLevelAdmin } from '../user_profile/UserProfile';
 import { UserProfileManager } from '../user_profile/UserProfileManager';
@@ -34,17 +34,25 @@ async function createAdminUser(userManager: UserProfileManager): Promise<void> {
 
 //
 
-class ResourceManagerAppImpl implements ResourceManager {
-  UserProfileManagerImpl: UserProfileManagerImpl;
-  constructor(UserProfileManagerImpl: UserProfileManagerImpl) {
-    this.UserProfileManagerImpl = UserProfileManagerImpl;
+class ResourceProviderAppImpl implements ResourceProvider {
+  userProfileManagerImpl: UserProfileManagerImpl;
+  privilegedUserProfileManagerImpl: UserProfileManagerImpl;
+  constructor(
+    userProfileManagerImpl: UserProfileManagerImpl,
+    privilegedUserProfileManagerImpl: UserProfileManagerImpl
+  ) {
+    this.userProfileManagerImpl = userProfileManagerImpl;
+    this.privilegedUserProfileManagerImpl = privilegedUserProfileManagerImpl;
   }
   getUserManager(): UserProfileManager {
-    return this.UserProfileManagerImpl;
+    return this.userProfileManagerImpl;
+  }
+  getPrivilegedUserManager(): UserProfileManager {
+    return this.privilegedUserProfileManagerImpl;
   }
 }
 
-async function createResourceManagerAppImpl(): Promise<ResourceManagerAppImpl> {
+async function createResourceProviderAppImpl(): Promise<ResourceProviderAppImpl> {
   // TODO: separeate Storage and Crypto, UserProfileManagerImpls
 
   const storageOptions = {
@@ -58,10 +66,26 @@ async function createResourceManagerAppImpl(): Promise<ResourceManagerAppImpl> {
     storageOptions
   );
 
-  const userManager = new UserProfileManagerImpl(userStorage);
+  const privilegedUserStorage = await createStorage(
+    'memory',
+    AppConfig.storageDbName,
+    'puser',
+    {}
+  );
 
-  await createAdminUser(userManager);
-  return new ResourceManagerAppImpl(userManager);
+  const userManager = new UserProfileManagerImpl(userStorage);
+  const privilegedUserManager = new UserProfileManagerImpl(
+    privilegedUserStorage
+  );
+
+  if ((await userManager.getUser(AppConfig.adminUserName)).ok) {
+    throw new Error(
+      `The admin username "${AppConfig.adminUserName}" already exists! Aborting!`
+    );
+  }
+  await createAdminUser(privilegedUserManager);
+
+  return new ResourceProviderAppImpl(userManager, privilegedUserManager);
 }
 
 //
@@ -74,7 +98,7 @@ export class AppMain {
     (async () => {
       let express = null as AppExpress | null;
       try {
-        const resource = await createResourceManagerAppImpl();
+        const resource = await createResourceProviderAppImpl();
         const handler = new AppHandler(resource);
         express = new AppExpress(handler);
         express.initialize();

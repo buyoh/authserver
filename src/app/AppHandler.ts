@@ -35,13 +35,26 @@ export class AppHandler {
       pass,
     };
 
-    const res = await this.resource
+    const res1 = await this.resource
       .getUserManager()
       .testUser(username, crypto, userInputForVerify);
-    if (res.ok === false) {
-      return { ...res, session: { ...session } };
+    if (res1.ok === true) {
+      return {
+        ok: true,
+        session: { username: res1.username, level: res1.level },
+      };
     }
-    return { ok: true, session: { username: res.username, level: res.level } };
+    const res2 = await this.resource
+      .getPrivilegedUserManager()
+      .testUser(username, crypto, userInputForVerify);
+    if (res2.ok === true) {
+      return {
+        ok: true,
+        session: { username: res2.username, level: res2.level },
+      };
+    }
+    // If it fails, return the result of the standard usermanager.
+    return { ...res1, session: { ...session } };
   }
 
   async loggedout(_session: AppUserSession): Promise<ResultOk | ResultErrors> {
@@ -52,8 +65,14 @@ export class AppHandler {
     session: AppUserSession,
     username: string
   ): Promise<(ResultOk & User) | ResultErrors> {
-    const res = await this.resource.getUserManager().getUser(username);
-    return res;
+    const res1 = await this.resource.getUserManager().getUser(username);
+    if (!res1.ok) {
+      const res2 = await this.resource
+        .getPrivilegedUserManager()
+        .getUser(username);
+      return res2;
+    }
+    return res1;
   }
 
   async getUsers(session: AppUserSession): Promise<
@@ -66,9 +85,13 @@ export class AppHandler {
     if (res1.ok === false) {
       return res1;
     }
+    const res2 = await this.resource.getPrivilegedUserManager().allUsers();
+    if (res2.ok === false) {
+      return res2;
+    }
     return {
       ok: true,
-      data: res1.data.map((e) => ({
+      data: res1.data.concat(res2.data).map((e) => ({
         username: e.username,
         level: e.level,
         me: e.username === session.username,
@@ -86,6 +109,14 @@ export class AppHandler {
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
     }
+    // Avoid keeping the same username in both usermanagers.
+    const res0 = await this.resource
+      .getPrivilegedUserManager()
+      .getUser(username);
+    if (res0.ok) {
+      return kResultInvalid;
+    }
+    // Create a user into the standard usermanager.
     const res1 = await this.resource
       .getUserManager()
       .addUser({ username, level }, crypto, { username, pass });
