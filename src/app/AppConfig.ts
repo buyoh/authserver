@@ -49,7 +49,7 @@ function importAppConfigFromEnvInternal(): AppConfig {
       description:
         // 'Specify the administrator. The administrator user will be created if it does not exist.',
         'The password for the administrator',
-      default: 'root',
+      // default: 'root',
       type: 'string',
     })
     .option('create-user-admin-crypto', {
@@ -93,7 +93,7 @@ function importAppConfigFromEnvInternal(): AppConfig {
   const frontend = argv['frontend'] == 'webpack' ? 'webpack' : 'static';
 
   const adminUserName = argv['admin-username'] || 'root'; // TODO: How to validate requiresArg on yargs
-  const adminUserPass = argv['create-user-admin-password'] || 'root';
+  const adminUserPass = argv['create-user-admin-password'];
   const passCryptoMode =
     argv['create-user-admin-crypto'] == 'otpauth'
       ? 'otpauth'

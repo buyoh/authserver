@@ -3,20 +3,22 @@ import { randomBytes, scryptSync } from 'crypto';
 
 type SimplePassCryptoUserInputForGenerate = {
   username: string;
-  pass: string;
+  pass?: string;
 };
 type SimplePassCryptoSecretData = {
   salt: string;
   hash: string;
 };
-type SimplePassCryptoResultOfGenerate = {};
+type SimplePassCryptoResultOfGenerate = {
+  pass?: string;
+};
 type SimplePassCryptoUserInputForVerify = {
   username: string;
-  pass: string;
+  pass?: string;
 };
 
 export function isValidPassword(password: string): boolean {
-  return 5 <= password.length && password.length <= 200;
+  return 4 <= password.length && password.length <= 200;
 }
 
 const SimplePassCryptoImpl: PassCryptoImpl<
@@ -31,17 +33,20 @@ const SimplePassCryptoImpl: PassCryptoImpl<
         result: SimplePassCryptoResultOfGenerate;
       }
     | Error {
-    if (isValidPassword(input.pass)) return new Error('pass is invalid');
     // TODO: support async!
+    const generatePass = !input.pass;
+    const pass = generatePass
+      ? randomBytes(4).toString('hex')
+      : '' + input.pass;
+    if (!isValidPassword(pass)) return new Error('pass is invalid');
+
     const salt = randomBytes(64);
-    const hash = scryptSync(
-      input.pass + ' ' + input.username,
-      salt,
-      64
-    ).toString('hex');
+    const hash = scryptSync(pass + ' ' + input.username, salt, 64).toString(
+      'hex'
+    );
     return {
       secret: { salt: salt.toString('hex'), hash },
-      result: {},
+      result: { pass: generatePass ? pass : undefined },
     };
   },
   verify(
