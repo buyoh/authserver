@@ -1,0 +1,22 @@
+// @import "./../../style/color.scss";
+
+.button {
+  display: block;
+}
+
+.large {
+  font-size: 2rem;
+  padding: 0.5em 2em;
+}
+
+.special {
+  border: 2px solid #eee;
+  background-color: #08f;
+  color: #f4f4f4;
+}
+.special:hover {
+  background-color: #29f;
+}
+.special:active {
+  border-color: #29f;
+}
