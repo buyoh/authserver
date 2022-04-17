@@ -4,20 +4,35 @@ import {
   ResultErrors,
   kResultNotFound,
   kResultInvalid,
+  ResultInvalid,
 } from '../base/error';
 import { ResourceProvider } from './ResourceProvider';
 import {
+  AuthLevel,
   AuthLevelAdmin,
+  AuthLevelManager,
   AuthLevelMember,
   User,
 } from '../user_profile/UserProfile';
-import { AppUserSession } from './AppUserSession';
+import { AppUserSession, kInvalidAppUserSession } from './AppUserSession';
 import { UserProfileManager } from '../user_profile/UserProfileManager';
+import { PassCryptoMode } from '../crypto/PassCryptoProxy';
 
-const defaultUsers = [
+//
+// testdata
+//
+
+const kPrivilegedUsers = [
   {
     username: 'admin',
     level: AuthLevelAdmin,
+  },
+] as User[];
+
+const kDefaultUsers = [
+  {
+    username: 'manager',
+    level: AuthLevelManager,
   },
   {
     username: 'member',
@@ -25,11 +40,17 @@ const defaultUsers = [
   },
 ] as User[];
 
+//
+// mocks
+//
+
 class UserProfileManagerTestImpl implements UserProfileManager {
   users: User[];
   err: ResultErrors | null;
-  constructor() {
-    this.users = defaultUsers.map((u) => ({ ...u }));
+
+  constructor(users: User[]) {
+    // Clone array, but shallow copy.
+    this.users = users.map((u) => ({ ...u }));
     this.err = null;
     this.addUser = jest.fn(this.addUser);
     this.getUser = jest.fn(this.getUser);
@@ -37,82 +58,126 @@ class UserProfileManagerTestImpl implements UserProfileManager {
     this.testUser = jest.fn(this.testUser);
     this.deleteUser = jest.fn(this.deleteUser);
   }
+
   setResultErrorforTest(e: ResultErrors | null) {
     this.err = e;
   }
+
   async addUser(
-    user: User
-  ): Promise<(ResultOk & { otpauth_url: string }) | ResultErrors> {
+    user: User,
+    passCryptoMode: PassCryptoMode,
+    userInputForGenerate: object
+  ): Promise<(ResultOk & { result: object }) | ResultErrors> {
     if (this.err) return this.err;
     this.users = this.users.concat(user);
   }
+
   async getUser(username: string): Promise<ResultErrors | (ResultOk & User)> {
     if (this.err) return this.err;
     const user = this.users.find((u) => u.username == username);
     if (user) return { ok: true, ...user };
     else return kResultNotFound;
   }
+
   async allUsers(): Promise<ResultErrors | (ResultOk & { data: User[] })> {
     if (this.err) return this.err;
     return { ok: true, data: this.users };
   }
+
   async testUser(
     username: string,
-    pass: string,
-    incTryCount: boolean
-  ): Promise<ResultErrors | (ResultOk & User)> {
-    if (this.err) return this.err;
+    passCryptoMode: PassCryptoMode,
+    userInputForVerify: object
+  ): Promise<ResultInvalid | (ResultOk & User)> {
+    if (this.err) {
+      if (this.err.result !== 'invalid')
+        throw new Error('testUser returns only ResultInvalid');
+      return this.err;
+    }
+    // Only check username
     const res = await this.getUser(username);
     if (!res.ok) return kResultInvalid;
     return res;
   }
+
   async deleteUser(username: string): Promise<ResultOk | ResultErrors> {
     throw new Error('Method not implemented.');
   }
 }
 
+//
+
 class ResourceProviderTestImpl implements ResourceProvider {
   userProfileManager: UserProfileManager;
+  privilegedProfileManager: UserProfileManager;
   constructor() {
-    this.userProfileManager = new UserProfileManagerTestImpl();
-    console.log(Object.keys(this.userProfileManager));
+    this.userProfileManager = new UserProfileManagerTestImpl(kDefaultUsers);
+    this.privilegedProfileManager = new UserProfileManagerTestImpl(
+      kPrivilegedUsers
+    );
+  }
+  getPrivilegedUserManager(): UserProfileManager {
+    return this.privilegedProfileManager;
   }
   getUserManager(): UserProfileManager {
     return this.userProfileManager;
   }
 }
 
-describe('test', () => {
-  it('getUsers', async () => {
+//
+// utils
+//
+
+function createAppUserSession(
+  username: string,
+  level: AuthLevel
+): AppUserSession {
+  return {
+    username,
+    level,
+  };
+}
+
+//
+// testcases
+//
+
+describe('AppHandler', () => {
+  it('call getUsers by admin', async () => {
     const resourceProvider = new ResourceProviderTestImpl();
     const handler = new AppHandler(resourceProvider);
-    const session = new AppUserSession({
-      username: 'admin',
-      level: AuthLevelAdmin,
-    });
+
+    const session = createAppUserSession('admin', AuthLevelAdmin);
     const res = await handler.getUsers(session);
+
     expect(res.ok).toBeTruthy();
     if (!res.ok) return;
-    expect(res.data.length).toEqual(2);
+    expect(res.data.length).toEqual(3);
     expect(resourceProvider.userProfileManager.allUsers).toHaveBeenCalledTimes(
       1
     );
   });
 
-  it('testUser: authorize', async () => {
+  it('call testUser, authorize admin, success', async () => {
     const resourceProvider = new ResourceProviderTestImpl();
     const handler = new AppHandler(resourceProvider);
-    const session = AppUserSession.createEmpty();
-    const res = await handler.login(session, 'admin', 'pass');
+
+    const session = { ...kInvalidAppUserSession };
+    const res = await handler.login(session, 'admin', 'passphrase', 'pass');
+
     expect(res.ok).toBeTruthy();
     if (!res.ok) return;
     expect(resourceProvider.userProfileManager.testUser).toHaveBeenCalledTimes(
       1
     );
-    expect(resourceProvider.userProfileManager.testUser).toHaveBeenCalledWith(
-      'admin',
-      'pass',
-      true
-    );
+    expect(
+      resourceProvider.privilegedProfileManager.testUser
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      resourceProvider.privilegedProfileManager.testUser
+    ).toHaveBeenCalledWith('admin', 'pass', {
+      pass: 'passphrase',
+      username: 'admin',
+    });
   });
 });
