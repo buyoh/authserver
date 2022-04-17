@@ -42,8 +42,43 @@ export class WebContentsServerDevImpl implements WebContentsServer {
     res: Express.Response,
     next: Express.NextFunction
   ): void {
-    if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(webDirName + '/')(req, res, next);
+    if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
+      res.sendFile(webDirName + '/auth-portal-react/loggedin.html');
+    } else {
+      next();
+    }
+  }
+  responseNonLoggedIn(
+    req: Express.Request,
+    res: Express.Response,
+    next: Express.NextFunction
+  ): void {
+    if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
+      res.sendFile(webDirName + '/auth-portal-react/login.html');
+    } else {
+      next();
+    }
+  }
+}
+
+export class WebContentsServerImpl implements WebContentsServer {
+  constructor() {
+    // TODO: Check that the user have run `yarn build`
+  }
+  middlewares(): Array<Express.RequestHandler> {
+    return [];
+  }
+  responseLoggedIn(
+    req: Express.Request,
+    res: Express.Response,
+    next: Express.NextFunction
+  ): void {
+    if (req.path.startsWith('/auth-portal/bundle/')) {
+      // Express.static(webDirName + '/')(req, res, next);
+      // TODO: bad workaround
+      res.sendFile(
+        webDirName + '/auth-portal-react/bundle/' + Path.basename(req.path)
+      );
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
       res.sendFile(webDirName + '/auth-portal-react/loggedin.html');
     } else {
@@ -55,46 +90,15 @@ export class WebContentsServerDevImpl implements WebContentsServer {
     res: Express.Response,
     next: Express.NextFunction
   ): void {
-    if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(webDirName + '/')(req, res, next);
+    // TODO: fix visibility
+    if (req.path.startsWith('/auth-portal/bundle/')) {
+      // Express.static(webDirName + '/')(req, res, next);
+      // TODO: bad workaround
+      res.sendFile(
+        webDirName + '/auth-portal-react/bundle/' + Path.basename(req.path)
+      );
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
       res.sendFile(webDirName + '/auth-portal-react/login.html');
-    } else {
-      next();
-    }
-  }
-}
-
-export class WebContentsServerImpl implements WebContentsServer {
-  middlewares(): Array<Express.RequestHandler> {
-    return [];
-  }
-  responseLoggedIn(
-    req: Express.Request,
-    res: Express.Response,
-    next: Express.NextFunction
-  ): void {
-    if (req.path.startsWith('/auth-portal/module/')) {
-      Express.static(webDirName + '/')(req, res, next);
-    } else if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(webDirName + '/')(req, res, next);
-    } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(webDirName + '/auth-portal/loggedin.html');
-    } else {
-      next();
-    }
-  }
-  responseNonLoggedIn(
-    req: Express.Request,
-    res: Express.Response,
-    next: Express.NextFunction
-  ): void {
-    if (req.path.startsWith('/auth-portal/module/')) {
-      Express.static(webDirName + '/')(req, res, next);
-    } else if (req.path.startsWith('/auth-portal/assets/')) {
-      Express.static(webDirName + '/')(req, res, next);
-    } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(webDirName + '/auth-portal/login.html');
     } else {
       next();
     }

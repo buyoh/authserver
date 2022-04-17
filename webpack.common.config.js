@@ -1,23 +1,11 @@
 const process = require('process');
-const webpack = require('webpack');
 const tsconfig_json = process.env.TS_NODE_PROJECT || 'tsconfig.webpack.json';
 
 module.exports = {
   // mode: 'development',
-  entry: {
-    // app: [
-    //   __dirname + '/src/web/api.ts',
-    //   'webpack-hot-middleware/client?reload=true&timeout=1000',
-    // ],
-    'login-react': [
-      __dirname + '/src/web/react/login.tsx',
-      'webpack-hot-middleware/client?reload=true&timeout=1000',
-    ],
-    'loggedin-react': [
-      __dirname + '/src/web/react/loggedin.tsx',
-      'webpack-hot-middleware/client?reload=true&timeout=1000',
-    ],
-  },
+  // entry: {
+  //   // depend on mode
+  // },
   output: {
     path: __dirname + '/src/web/auth-portal-react/bundle',
     publicPath: '/auth-portal/bundle',
@@ -64,5 +52,4 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.scss'],
   },
-  plugins: [new webpack.HotModuleReplacementPlugin()],
 };
