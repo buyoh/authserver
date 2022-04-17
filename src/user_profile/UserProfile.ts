@@ -17,6 +17,11 @@ export type AuthLevel =
   | typeof AuthLevelMember
   | typeof AuthLevelNone;
 
+export const kManageableAuthLevelList = [
+  AuthLevelManager,
+  AuthLevelMember,
+] as AuthLevel[];
+
 export const kMaxTryCount = 3;
 export const kAuthPenaltySec = 60;
 
@@ -30,7 +35,7 @@ export interface User {
 
 //
 
-export function convertToAuthLevel(maybeLevel: any): undefined | AuthLevel {
+export function validateAuthLevel(maybeLevel: any): undefined | AuthLevel {
   if (typeof maybeLevel != 'number') return;
   return [
     AuthLevelAdmin as AuthLevel,
@@ -38,6 +43,16 @@ export function convertToAuthLevel(maybeLevel: any): undefined | AuthLevel {
     AuthLevelMember as AuthLevel,
     AuthLevelNone as AuthLevel,
   ].find((e) => e === maybeLevel);
+}
+
+export function authLevelToString(level: AuthLevel): string {
+  return level === AuthLevelAdmin
+    ? 'admin'
+    : level === AuthLevelManager
+    ? 'manager'
+    : level === AuthLevelMember
+    ? 'member'
+    : '#' + level;
 }
 
 export function isEditableAuthLevel(me: AuthLevel, target: AuthLevel): boolean {

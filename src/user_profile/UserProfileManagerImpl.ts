@@ -1,7 +1,7 @@
 import { KeyValueStorage } from '../storage/KeyValueStorageInterface';
 import {
   AuthLevel,
-  convertToAuthLevel,
+  validateAuthLevel,
   isValudUsername,
   kAuthPenaltySec,
   kMaxTryCount,
@@ -176,7 +176,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       console.error('unexpected error: invalid DB username');
       return kResultInvalid;
     }
-    const level = convertToAuthLevel(resLevel);
+    const level = validateAuthLevel(resLevel);
     if (level === undefined || !resSecret) {
       console.error('unexpected error: invalid DB level');
       return kResultInvalid;

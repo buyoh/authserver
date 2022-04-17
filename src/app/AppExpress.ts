@@ -6,7 +6,7 @@ import {
   kResultInvalid,
   ResultErrors,
 } from '../base/error';
-import { convertToAuthLevel } from '../user_profile/UserProfile';
+import { validateAuthLevel } from '../user_profile/UserProfile';
 import { isLoggedIn, validateAppUserSession } from './AppUserSession';
 import {
   WebContentsServerDevImpl,
@@ -185,6 +185,7 @@ export class AppExpress {
 
     // --------------------------
 
+    // Get myself
     app.get('/auth-portal/api/me', (req, res) => {
       const session = validateAppUserSession(req.session);
       if (!isLoggedIn(session)) {
@@ -192,12 +193,16 @@ export class AppExpress {
       } else {
         res.status(200);
         const { username, level } = session;
+        // TODO: {ok, data: {username, level}}
+        // 統一されてないのは良くない。
+        // array を返したいケースを考慮すると、子要素にしたほうが良さそう
         res.json({ ok: true, username, level });
       }
     });
 
     //
 
+    // Get a user
     app.get('/auth-portal/api/user/:username', (req, res) => {
       const { username } = req.params;
       const session = validateAppUserSession(req.session);
@@ -227,6 +232,7 @@ export class AppExpress {
 
     //
 
+    // Get user list
     app.get('/auth-portal/api/user', (req, res) => {
       const session = validateAppUserSession(req.session);
       if (!isLoggedIn(session)) {
@@ -255,6 +261,7 @@ export class AppExpress {
 
     //
 
+    // Add user
     app.post('/auth-portal/api/user', (req, res) => {
       const session = validateAppUserSession(req.session);
       if (!isLoggedIn(session)) {
@@ -262,7 +269,7 @@ export class AppExpress {
         return;
       }
       const username = req.body.username;
-      const level = convertToAuthLevel(parseInt(req.body.level));
+      const level = validateAuthLevel(parseInt(req.body.level));
       const crypto = convertToPassCryptoMode(req.body.crypto);
       const pass = typeof req.body.pass != 'string' ? '' : req.body.pass;
       if (
@@ -296,6 +303,7 @@ export class AppExpress {
 
     //
 
+    // Delete user
     app.delete('/auth-portal/api/user/:username', (req, res) => {
       const { username } = req.params;
       const session = validateAppUserSession(req.session);

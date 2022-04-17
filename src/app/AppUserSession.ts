@@ -1,7 +1,7 @@
 import {
   AuthLevel,
   AuthLevelNone,
-  convertToAuthLevel,
+  validateAuthLevel,
   isValudUsername,
 } from '../user_profile/UserProfile';
 
@@ -35,7 +35,7 @@ export function validateAppUserSession(a: any) {
     return { ...kInvalidAppUserSession };
   const { username, level } = a;
   if (!isValudUsername(username)) return { ...kInvalidAppUserSession };
-  const convertedLevel = convertToAuthLevel(level);
+  const convertedLevel = validateAuthLevel(level);
   if (convertedLevel === undefined) return { ...kInvalidAppUserSession };
   return { username, level: convertedLevel };
 }

@@ -1,23 +1,10 @@
-type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
-
-function myfetch(
-  uri: string,
-  method: HTTPMethod,
-  json: object
-): Promise<Response> {
-  const headers = {
-    'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-  };
-  const body = Object.entries(json)
-    .map((kv) => kv[0] + '=' + encodeURIComponent(kv[1]))
-    .join('&');
-  return fetch(uri, { method, body, headers });
-}
+import { AuthLevel } from '../../user_profile/UserProfile';
+import { FetchResult, handleMyFetch, myFetch } from './Fetch';
 
 export namespace WebApi {
   // TODO: REFACTORING
   export function fetchLogin(username, pass, crypto) {
-    return myfetch('/auth-portal/api/login', 'POST', {
+    return myFetch('/auth-portal/api/login', 'POST', {
       username,
       crypto,
       pass,
@@ -25,37 +12,94 @@ export namespace WebApi {
   }
 
   export function fetchLogout() {
-    return myfetch('/auth-portal/api/logout', 'POST', {});
+    return myFetch('/auth-portal/api/logout', 'POST', {});
   }
 
-  function fetchGetAllUser() {
-    return fetch('/auth-portal/api/user');
+  // export async function fetchMe(): Promise<
+  //   FetchResult<{ username: string; level: AuthLevel }>
+  // > {
+  //   const res = await handleMyFetch('/auth-portal/api/me', 'GET', {});
+  //   if (res.ok && res.result.ok) {
+  //     if (
+  //       typeof res.result['username'] == 'string' &&
+  //       typeof res.result['level'] == 'number'
+  //     ) {
+  //       const level = validateAuthLevel(res.result['level']);
+  //       if (level !== undefined) {
+  //         return res;
+  //       }
+  //     }
+  //     console.log('validation failed');
+  //     res.result = { ok: false, result: 'invalid' };
+  //   }
+  //   return res;
+  // }
+
+  export async function fetchGetAllUser(): Promise<
+    FetchResult<{
+      data: [{ username: string; level: AuthLevel; me: boolean }];
+    }>
+  > {
+    const res = await handleMyFetch('/auth-portal/api/user', 'GET', {});
+    if (res.ok && res.result.ok) {
+      // TODO: validate
+      return res;
+    }
+    return res;
   }
 
-  function fetchAddUser(username, level, crypto, pass) {
-    return myfetch('/auth-portal/api/user', 'POST', {
+  // export async function fetchGetUser(username: string): Promise<
+  //   FetchResult<{
+  //     data: { username: string; level: AuthLevel; me: boolean };
+  //   }>
+  // > {
+  //   const res = await handleMyFetch('/auth-portal/api/user/'+username, 'GET', {});
+  //   if (res.ok && res.result.ok) {
+  //     // TODO: validate
+  //     return res;
+  //   }
+  //   return res;
+  // }
+
+  export async function fetchAddUser(
+    username: string,
+    level: AuthLevel,
+    crypto: string,
+    pass: string
+  ): Promise<
+    FetchResult<{
+      data: {
+        username: string;
+        level: AuthLevel;
+        crypto: string;
+        result: any;
+      };
+    }>
+  > {
+    const res = await handleMyFetch('/auth-portal/api/user', 'POST', {
       username,
       level,
       crypto,
       pass,
     });
+    if (res.ok && res.result.ok) {
+      // TODO: validate
+      return res;
+    }
+    return res;
   }
 
-  function fetchDeleteUser(username) {
-    return myfetch('/auth-portal/api/user/' + username, 'DELETE', {});
-  }
-
-  function contentLoaded(func) {
-    document.addEventListener('DOMContentLoaded', func);
-  }
-
-  function authLevelToString(level) {
-    return level === 1
-      ? 'admin'
-      : level === 11
-      ? 'manager'
-      : level === 21
-      ? 'member'
-      : '#' + level;
+  export async function fetchDeleteUser(
+    username: string
+  ): Promise<FetchResult<{}>> {
+    const res = await handleMyFetch(
+      '/auth-portal/api/user/' + username,
+      'DELETE',
+      {}
+    );
+    if (res.ok && res.result.ok) {
+      return res;
+    }
+    return res;
   }
 }

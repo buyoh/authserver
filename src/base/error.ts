@@ -33,9 +33,40 @@ export type Result =
   | ResultOk
   | ResultNotFound
   | ResultForbidden
-  | ResultInvalid;
+  | ResultInvalid
+  | ResultInternalError;
 export type ResultErrors =
   | ResultNotFound
   | ResultForbidden
   | ResultInvalid
   | ResultInternalError;
+
+function validateResultInternal(json: {
+  [key: string]: unknown;
+}): Result | null {
+  const ok = (json as { [key: string]: unknown })['ok'];
+  if (ok === true) {
+    return { ...json, ok: true };
+  } else if (ok === false) {
+    const result = json['result'];
+    if (
+      result === 'notfound' ||
+      result === 'forbidden' ||
+      result === 'invalid' ||
+      result === 'error'
+    )
+      return { ...json, ok: false, result: result };
+    return { ...json, ok: false, result: 'error' };
+  } else {
+    console.log('validateResult: invalid result data found');
+    return null;
+  }
+}
+
+export function validateResult(json: unknown): Result | null {
+  if (!json || typeof json != 'object') {
+    console.log('validateResult: invalid result data found');
+    return null;
+  }
+  return validateResultInternal(json as { [key: string]: unknown });
+}

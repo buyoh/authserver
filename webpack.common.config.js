@@ -37,7 +37,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /src\/web\/.*\.tsx?$/,
+        test: /src\/.*\.tsx?$/,
         use: {
           loader: 'ts-loader',
           options: {
