@@ -50,13 +50,14 @@ tr td {
   border-bottom: 1px dashed #eee5;
 }
 
+output {
+  white-space: pre-wrap;
+}
+
 .pagewrapper-full {
   height: 100vh;
   align-items: center;
   display: flex;
-}
-.pagewrapper {
-  /**/
 }
 
 .page {
@@ -99,39 +100,4 @@ tr td {
 .highlight{
   font-weight: bolder;
   color:#0f8;
-}
-
-input.large{
-  font-size: 2rem;
-}
-
-button.large {
-  font-size: 2rem;
-  padding: 0.5em 2em;
-}
-
-select.large{
-  font-size: 2rem;
-}
-
-button.special {
-  border: 2px solid #eee;
-  background-color: #08f;
-  color: #f4f4f4;
-}
-button.special:hover {
-  background-color: #29f;
-}
-button.special:active {
-  border-color: #29f;
-}
-
-output {
-  white-space: pre-wrap;
-}
-
-#form-login-wrap {
-  margin: auto;
-  height: 18em;
-  width: 24em;
 }
