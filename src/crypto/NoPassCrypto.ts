@@ -14,7 +14,10 @@ const NoPassCryptoImpl: PassCryptoImpl<
   NoPassCryptoResultOfGenerate,
   NoPassCryptoUserInputForVerify
 > = {
-  generate(input: NoPassCryptoUserInputForGenerate):
+  generate(
+    _username: string,
+    _input: NoPassCryptoUserInputForGenerate
+  ):
     | {
         secret: NoPassCryptoSecretData;
         result: NoPassCryptoResultOfGenerate;
@@ -26,8 +29,9 @@ const NoPassCryptoImpl: PassCryptoImpl<
     };
   },
   verify(
-    secret: NoPassCryptoSecretData,
-    input: NoPassCryptoUserInputForVerify
+    _username: string,
+    _secret: NoPassCryptoSecretData,
+    _input: NoPassCryptoUserInputForVerify
   ): boolean {
     return true;
   },
@@ -36,10 +40,13 @@ const NoPassCryptoImpl: PassCryptoImpl<
 // any にしてしまったら意味が無い…
 // ただクライアントとやりとりする間に型は失うので、どこまで型を引っ張るかは検討
 export const NoPassCrypto: PassCrypto = {
-  generate: function (input: any): Error | { secret: any; result: any } {
-    return NoPassCryptoImpl.generate(input);
+  generate: function (
+    username: string,
+    input: any
+  ): Error | { secret: any; result: any } {
+    return NoPassCryptoImpl.generate(username, input);
   },
-  verify: function (secret: any, input: any): boolean {
-    return NoPassCryptoImpl.verify(secret, input);
+  verify: function (username: string, secret: any, input: any): boolean {
+    return NoPassCryptoImpl.verify(username, secret, input);
   },
 };

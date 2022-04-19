@@ -91,11 +91,8 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
 
-    // TODO: { ...userInputForGenerate, username }
-    // userInputForGenerate に username などの情報を取り込みたいことは想定される設計だが、
-    // どのタイミングで取り込むべき？引数や interface として User の枠を用意すべき？
     const crypto = getPassCryptoInstance(passCryptoMode);
-    const res = crypto.generate({ ...userInputForGenerate, username });
+    const res = crypto.generate(username, userInputForGenerate);
     if (res instanceof Error) return { ...kResultInvalid, detail: res.message };
     const { secret, result } = res;
 
@@ -203,14 +200,8 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
 
-    // TODO: { ...userInputForGenerate, username }
-    // userInputForGenerate に username などの情報を取り込みたいことは想定される設計だが、
-    // どのタイミングで取り込むべき？引数や interface として User の枠を用意すべき？
     const crypto = getPassCryptoInstance(passCryptoMode);
-    const res3 = crypto.verify(
-      { ...resSecret, username: resUsername },
-      userInputForVerify
-    );
+    const res3 = crypto.verify(resUsername, resSecret, userInputForVerify);
     if (!res3) {
       if (incTryCount) {
         await this.setTryCount(

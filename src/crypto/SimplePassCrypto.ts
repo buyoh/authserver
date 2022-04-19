@@ -2,7 +2,6 @@ import { PassCrypto, PassCryptoImpl } from './PassCryptoInterface';
 import { randomBytes, scryptSync } from 'crypto';
 
 type SimplePassCryptoUserInputForGenerate = {
-  username: string;
   pass?: string;
 };
 type SimplePassCryptoSecretData = {
@@ -13,7 +12,6 @@ type SimplePassCryptoResultOfGenerate = {
   pass?: string;
 };
 type SimplePassCryptoUserInputForVerify = {
-  username: string;
   pass?: string;
 };
 
@@ -27,7 +25,10 @@ const SimplePassCryptoImpl: PassCryptoImpl<
   SimplePassCryptoResultOfGenerate,
   SimplePassCryptoUserInputForVerify
 > = {
-  generate(input: SimplePassCryptoUserInputForGenerate):
+  generate(
+    username: string,
+    input: SimplePassCryptoUserInputForGenerate
+  ):
     | {
         secret: SimplePassCryptoSecretData;
         result: SimplePassCryptoResultOfGenerate;
@@ -41,24 +42,21 @@ const SimplePassCryptoImpl: PassCryptoImpl<
     if (!isValidPassword(pass)) return new Error('pass is invalid');
 
     const salt = randomBytes(64);
-    const hash = scryptSync(pass + ' ' + input.username, salt, 64).toString(
-      'hex'
-    );
+    const hash = scryptSync(pass + ' ' + username, salt, 64).toString('hex');
     return {
       secret: { salt: salt.toString('hex'), hash },
       result: { pass: generatePass ? pass : undefined },
     };
   },
   verify(
+    username: string,
     secret: SimplePassCryptoSecretData,
     input: SimplePassCryptoUserInputForVerify
   ): boolean {
     const salt = Buffer.from(secret.salt, 'hex');
-    const hash = scryptSync(
-      input.pass + ' ' + input.username,
-      salt,
-      64
-    ).toString('hex');
+    const hash = scryptSync(input.pass + ' ' + username, salt, 64).toString(
+      'hex'
+    );
     return secret.hash === hash;
   },
 };
@@ -66,10 +64,13 @@ const SimplePassCryptoImpl: PassCryptoImpl<
 // any にしてしまったら意味が無い…
 // ただクライアントとやりとりする間に型は失うので、どこまで型を引っ張るかは検討
 export const SimplePassCrypto: PassCrypto = {
-  generate: function (input: any): Error | { secret: any; result: any } {
-    return SimplePassCryptoImpl.generate(input);
+  generate: function (
+    username: string,
+    input: any
+  ): Error | { secret: any; result: any } {
+    return SimplePassCryptoImpl.generate(username, input);
   },
-  verify: function (secret: any, input: any): boolean {
-    return SimplePassCryptoImpl.verify(secret, input);
+  verify: function (username: string, secret: any, input: any): boolean {
+    return SimplePassCryptoImpl.verify(username, secret, input);
   },
 };
