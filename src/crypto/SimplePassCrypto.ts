@@ -1,4 +1,4 @@
-import { PassCrypto, PassCryptoImpl } from './PassCryptoInterface';
+import { PassCrypto, PassCryptoImpl } from './PassCryptoServerInterface';
 import { randomBytes, scryptSync } from 'crypto';
 
 type SimplePassCryptoUserInputForGenerate = {
@@ -12,7 +12,7 @@ type SimplePassCryptoResultOfGenerate = {
   pass?: string;
 };
 type SimplePassCryptoUserInputForVerify = {
-  pass?: string;
+  pass: string;
 };
 
 export function isValidPassword(password: string): boolean {

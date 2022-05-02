@@ -4,6 +4,7 @@ export interface PassCryptoImpl<
   UserResultOfGenerate,
   UserInputForVerify
 > {
+  // cryptoName: string;  // TODO:
   /**
    * generate a salt for creating a new secret.
    */

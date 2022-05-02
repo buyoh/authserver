@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { PassCrypto, PassCryptoImpl } from './PassCryptoInterface';
+import { PassCrypto, PassCryptoImpl } from './PassCryptoServerInterface';
 
 type NoPassCryptoUserInputForGenerate = {};
 type NoPassCryptoSecretData = {};
 type NoPassCryptoResultOfGenerate = {};
 type NoPassCryptoUserInputForVerify = {
-  pass: string;
+  // pass: string;
 };
 
 const NoPassCryptoImpl: PassCryptoImpl<

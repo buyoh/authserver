@@ -3,14 +3,20 @@ import TextInput from '../components/TextInput';
 import Button from '../components/Button';
 import Select from '../components/Select';
 import { WebApi } from '../../api/WebApi';
+import VerifyUserForm from '../components/VerifyUserForm';
+import {
+  kPassCryptoList,
+  PassCryptoMode,
+} from '../../../crypto/PassCryptoProxyWeb';
 // import Styles from './style.module.scss';
+
+const passCryptoOptions = kPassCryptoList.map((t) => ({ label: t, value: t }));
 
 type Props = {};
 
 type State = {
   username: string;
-  password: string;
-  cryptoType: string;
+  passCryptoMode: PassCryptoMode;
   resultLog: string;
 };
 
@@ -64,20 +70,17 @@ class LoginForm extends React.Component<Props, State> {
     super(props);
     this.state = {
       username: '',
-      password: '',
-      cryptoType: 'pass',
+      passCryptoMode: 'pass',
       resultLog: '',
     };
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  private handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  private handleSubmit(generated: object) {
     const username = this.state.username;
-    const password = this.state.password;
-    const cryptoType = this.state.cryptoType;
+    const cryptoType = this.state.passCryptoMode;
     (async () => {
-      const res = await tryToLogin(username, password, cryptoType);
+      const res = await tryToLogin(username, generated, cryptoType);
       this.setState({ ...this.state, resultLog: res.detail });
       if (res.ok) {
         transitLoggedIn();
@@ -87,47 +90,33 @@ class LoginForm extends React.Component<Props, State> {
 
   render(): JSX.Element {
     return (
-      <form onSubmit={this.handleSubmit} id="form-login">
+      <form id="form-login">
         <div>
           <div className="spaced-block">
-            <TextInput
-              placeholder="username"
-              value={this.state.username}
-              onChange={(t) => {
-                this.setState({ ...this.state, username: t });
-              }}
-              required={true}
-              style={['large']}
-            />
-            <TextInput
-              password={true}
-              placeholder="password"
-              value={this.state.password}
-              onChange={(t) => {
-                this.setState({ ...this.state, password: t });
-              }}
-              required={true}
-              style={['large']}
-            />
-          </div>
-          <div className="spaced-block">
             <Select
-              value={this.state.cryptoType}
-              onChange={(v) => {
-                this.setState({ ...this.state, cryptoType: v });
-              }}
-              options={[
-                { label: 'pass', value: 'pass' },
-                { label: 'otpauth', value: 'otpauth' },
-                { label: 'nopass', value: 'nopass' },
-              ]}
+              value={this.state.passCryptoMode}
+              options={passCryptoOptions}
+              onChange={(t) =>
+                this.setState({
+                  ...this.state,
+                  passCryptoMode: t as PassCryptoMode,
+                })
+              }
               style={['large']}
             />
           </div>
+          <TextInput
+            placeholder="username"
+            value={this.state.username}
+            onChange={(username) => this.setState({ ...this.state, username })}
+            style={['large']}
+          />
+          <VerifyUserForm
+            mode={this.state.passCryptoMode}
+            username={this.state.username}
+            onSubmit={this.handleSubmit}
+          />
         </div>
-        <Button style={['large', 'special']} submit={true}>
-          login
-        </Button>
         <hr />
         <div>
           <output className="highlight">{this.state.resultLog}</output>

@@ -129,7 +129,11 @@ export class AppExpress {
 
     app.post('/auth-portal/api/login', (req, res) => {
       const username = req.body.username;
-      const pass = req.body.pass;
+      const generated = req.body.generated;
+      // TODO: FIXME: easy implementation!
+      const pass = JSON.parse(generated).pass ?? '';
+      console.log('generated:', generated);
+
       const crypto = convertToPassCryptoMode(req.body.crypto);
       if (
         typeof username != 'string' ||
@@ -271,7 +275,11 @@ export class AppExpress {
       const username = req.body.username;
       const level = validateAuthLevel(parseInt(req.body.level));
       const crypto = convertToPassCryptoMode(req.body.crypto);
-      const pass = typeof req.body.pass != 'string' ? '' : req.body.pass;
+      // TODO: FIXME: easy implementation!
+      const generated = req.body.generated;
+      const pass = JSON.parse(generated).pass ?? '';
+      console.log('generated:', generated);
+
       if (
         typeof username != 'string' ||
         level === undefined ||

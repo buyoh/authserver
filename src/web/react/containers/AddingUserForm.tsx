@@ -16,15 +16,28 @@ import {
   PassCryptoMode,
 } from '../../../crypto/PassCryptoProxyWeb';
 import { WebApi } from '../../api/WebApi';
+import CreateUserForm from '../components/CreateUserForm';
+import CreateUserResult from '../components/CreateUserResult';
 // import Styles from './style.module.scss';
 
 // TODO: consider the `result` type
 async function addUser(
   username: string,
-  password: string,
+  generated: object,
   authLevel: AuthLevel,
   passCryptoMode: PassCryptoMode
-): Promise<{ ok: false; details: string } | { ok: true; result: any }> {
+): Promise<
+  | { ok: false; details: string }
+  | {
+      ok: true;
+      data: {
+        username: string;
+        level: AuthLevel;
+        crypto: string;
+        result: any;
+      };
+    }
+> {
   if (!username) {
     return { ok: false, details: 'username is empty' };
   }
@@ -32,7 +45,7 @@ async function addUser(
     username,
     authLevel,
     passCryptoMode,
-    password
+    generated
   );
   if (res.ok === false) {
     console.warn('addUser failed: ', res.response);
@@ -49,7 +62,7 @@ async function addUser(
     console.warn('addUser failed: wrong username', res.result);
     return { ok: false, details: 'internal error' };
   }
-  return { ok: true, result: res.result };
+  return { ok: true, data: res.result.data };
 }
 
 const passCryptoOptions = kPassCryptoList.map((t) => ({ label: t, value: t }));
@@ -66,6 +79,11 @@ type State = {
   authLevel: AuthLevel;
   passCryptoMode: PassCryptoMode;
   resultLog: string;
+  createdUserResult: null | {
+    username: string;
+    crypto: PassCryptoMode;
+    result: object;
+  };
 };
 
 class AddingUserForm extends React.Component<Props, State> {
@@ -77,14 +95,15 @@ class AddingUserForm extends React.Component<Props, State> {
       authLevel: AuthLevelMember,
       passCryptoMode: 'otpauth',
       resultLog: '',
+      createdUserResult: null,
     };
     this.handleAddUser = this.handleAddUser.bind(this);
   }
 
-  private handleAddUser(fetchUserList: () => Promise<void>) {
+  private handleAddUser(generated: object, fetchUserList: () => Promise<void>) {
     const pendingAddUser = addUser(
       this.state.username,
-      this.state.password,
+      generated,
       this.state.authLevel,
       this.state.passCryptoMode
     );
@@ -98,7 +117,7 @@ class AddingUserForm extends React.Component<Props, State> {
         return;
       }
 
-      const result = JSON.stringify(res.result);
+      const result = JSON.stringify(res.data);
       // TODO: display QRcode
       this.setState({ ...this.state, resultLog: result });
 
@@ -136,29 +155,31 @@ class AddingUserForm extends React.Component<Props, State> {
               })
             }
           />
-          <TextInput
+          <div>
+            <UserListContextConsumer>
+              {(userList) => (
+                <CreateUserForm
+                  mode={this.state.passCryptoMode}
+                  username={this.state.username}
+                  onSubmit={(generated) =>
+                    this.handleAddUser(generated, userList.triggerFetch)
+                  }
+                />
+              )}
+            </UserListContextConsumer>
+          </div>
+          {/* <TextInput
             placeholder="pass/salt"
             value={this.state.password}
             onChange={(t) => this.setState({ ...this.state, password: t })}
             required={true}
             password={true}
-          />
-        </div>
-        <div>
-          <UserListContextConsumer>
-            {(userList) => (
-              <Button
-                style={['special']}
-                onClick={() => this.handleAddUser(userList.triggerFetch)}
-              >
-                adduser
-              </Button>
-            )}
-          </UserListContextConsumer>
+          /> */}
         </div>
         <pre>
           <output className="highlight">{this.state.resultLog}</output>
         </pre>
+        <CreateUserResult mode={'otpauth'} result={undefined} />
       </div>
     );
   }

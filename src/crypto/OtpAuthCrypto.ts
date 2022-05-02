@@ -1,4 +1,4 @@
-import { PassCrypto, PassCryptoImpl } from './PassCryptoInterface';
+import { PassCrypto, PassCryptoImpl } from './PassCryptoServerInterface';
 import * as Speakeasy from 'speakeasy'; // TODO: replace this module. not maintained
 import * as crypto from 'crypto';
 

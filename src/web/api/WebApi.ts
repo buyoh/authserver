@@ -3,11 +3,11 @@ import { FetchResult, handleMyFetch, myFetch } from './Fetch';
 
 export namespace WebApi {
   // TODO: REFACTORING
-  export function fetchLogin(username, pass, crypto) {
+  export function fetchLogin(username, generated, crypto) {
     return myFetch('/auth-portal/api/login', 'POST', {
       username,
+      generated: JSON.stringify(generated),
       crypto,
-      pass,
     });
   }
 
@@ -65,7 +65,7 @@ export namespace WebApi {
     username: string,
     level: AuthLevel,
     crypto: string,
-    pass: string
+    generated: object
   ): Promise<
     FetchResult<{
       data: {
@@ -80,7 +80,7 @@ export namespace WebApi {
       username,
       level,
       crypto,
-      pass,
+      generated: JSON.stringify(generated),
     });
     if (res.ok && res.result.ok) {
       // TODO: validate
