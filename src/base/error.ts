@@ -49,14 +49,15 @@ function validateResultInternal(json: {
     return { ...json, ok: true };
   } else if (ok === false) {
     const result = json['result'];
+    const detail = json['detail'] ? `${json['detail']}` : undefined;
     if (
       result === 'notfound' ||
       result === 'forbidden' ||
       result === 'invalid' ||
       result === 'error'
     )
-      return { ...json, ok: false, result: result };
-    return { ...json, ok: false, result: 'error' };
+      return { ...json, ok: false, result: result, detail };
+    return { ...json, ok: false, result: 'error', detail };
   } else {
     console.log('validateResult: invalid result data found');
     return null;
