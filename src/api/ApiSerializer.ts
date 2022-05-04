@@ -1,8 +1,5 @@
 import { ResultErrors, validateResult } from '../base/error';
-import {
-  convertToPassCryptoMode,
-  PassCryptoMode,
-} from '../crypto/PassCryptoProxy';
+import { PassCryptoMode, convertToPassCryptoMode } from '../crypto/PassCrypto';
 import { AuthLevel, validateAuthLevel } from '../user_profile/UserProfile';
 import {
   ApiLoginRequest,

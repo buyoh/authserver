@@ -16,10 +16,8 @@ import {
   kResultInternalError,
 } from '../base/error';
 import { UserProfileManager } from './UserProfileManager';
-import {
-  getPassCryptoInstance,
-  PassCryptoMode,
-} from '../crypto/PassCryptoProxy';
+import { getPassCryptoInstance } from '../crypto/PassCryptoProxy';
+import { PassCryptoMode } from '../crypto/PassCrypto';
 
 //
 

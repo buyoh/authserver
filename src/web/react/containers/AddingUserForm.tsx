@@ -11,13 +11,10 @@ import {
 import Button from '../components/Button';
 import TextInput from '../components/TextInput';
 import Select from '../components/Select';
-import {
-  kPassCryptoList,
-  PassCryptoMode,
-} from '../../../crypto/PassCryptoProxyWeb';
 import { WebApi } from '../../api/WebApi';
 import CreateUserForm from '../components/CreateUserForm';
 import CreateUserResult from '../components/CreateUserResult';
+import { PassCryptoMode, kPassCryptoList } from '../../../crypto/PassCrypto';
 // import Styles from './style.module.scss';
 
 // TODO: consider the `result` type
@@ -53,7 +50,7 @@ async function addUser(
   }
   if (res.result.ok === false) {
     console.warn('addUser failed (bad request): ', res.result);
-    return { ok: false, details: res.result.detail };
+    return { ok: false, details: res.result.detail ?? '' };
   }
   if (res.result.username !== username || res.result.level !== authLevel) {
     console.warn('addUser failed: wrong username', res.result);

@@ -1,5 +1,5 @@
 import { ResultErrors, ResultOk } from '../base/error';
-import { PassCryptoMode } from '../crypto/PassCryptoProxy';
+import { PassCryptoMode } from '../crypto/PassCrypto';
 import { AuthLevel, User } from '../user_profile/UserProfile';
 
 //

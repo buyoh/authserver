@@ -1,15 +1,9 @@
 import { NoPassCrypto } from './NoPassCrypto';
 import { OtpAuthCrypto } from './OtpAuthCrypto';
+import { PassCryptoMode } from './PassCrypto';
 import { PassCrypto } from './PassCryptoServerInterface';
 import { SimplePassCrypto } from './SimplePassCrypto';
 
-export type PassCryptoMode = 'otpauth' | 'nopass' | 'pass';
-
-export function convertToPassCryptoMode(t: string): PassCryptoMode | null {
-  return t === 'otpauth' || t === 'nopass' || t === 'pass' ? t : null;
-}
-
-// TODO: Refactor: following PassCryptoProxyWeb
 export function getPassCryptoInstance(mode: PassCryptoMode): PassCrypto {
   if (mode === 'otpauth') return OtpAuthCrypto;
   else if (mode === 'nopass') return NoPassCrypto;

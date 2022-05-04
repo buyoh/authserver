@@ -1,5 +1,5 @@
-import { PassCryptoMode } from '../crypto/PassCryptoProxy';
 import yargs from 'yargs';
+import { PassCryptoMode } from '../crypto/PassCrypto';
 
 export interface AppConfig {
   port: string;

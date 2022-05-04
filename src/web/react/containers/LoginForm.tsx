@@ -1,13 +1,9 @@
 import React from 'react';
 import TextInput from '../components/TextInput';
-import Button from '../components/Button';
 import Select from '../components/Select';
 import { WebApi } from '../../api/WebApi';
 import VerifyUserForm from '../components/VerifyUserForm';
-import {
-  kPassCryptoList,
-  PassCryptoMode,
-} from '../../../crypto/PassCryptoProxyWeb';
+import { kPassCryptoList, PassCryptoMode } from '../../../crypto/PassCrypto';
 // import Styles from './style.module.scss';
 
 const passCryptoOptions = kPassCryptoList.map((t) => ({ label: t, value: t }));

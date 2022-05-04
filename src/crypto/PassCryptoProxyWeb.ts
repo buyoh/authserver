@@ -1,17 +1,8 @@
-// TODO: FIXME: shall not depend on crypto in nodejs
-
 import { InputViewConcept, OutputViewConcept } from '../ui/FormConcept';
 import { NoPassCryptoClientImpl } from './NoPassCryptoClient';
 import { OtpAuthCryptoClientImpl } from './OtpAuthCryptoClient';
 import { PassCryptoClientImpl } from './PassCryptoClientInterface';
 import { SimplePassCryptoClientImpl } from './SimplePassCryptoClient';
-
-export type PassCryptoMode = 'otpauth' | 'nopass' | 'pass';
-export const kPassCryptoList = [
-  'otpauth',
-  'nopass',
-  'pass',
-] as PassCryptoMode[];
 
 type Impls =
   | typeof NoPassCryptoClientImpl

@@ -10,6 +10,7 @@ import {
   ApiSerializerGetUsers,
   ApiSerializerLogin,
 } from '../../api/ApiSerializer';
+import { PassCryptoMode } from '../../crypto/PassCrypto';
 import { AuthLevel } from '../../user_profile/UserProfile';
 import { FetchResult, handleMyFetch, myFetch } from './Fetch';
 
@@ -85,7 +86,7 @@ export namespace WebApi {
   export async function fetchAddUser(
     username: string,
     level: AuthLevel,
-    crypto: string,
+    crypto: PassCryptoMode,
     generated: object
   ): Promise<FetchResult<ApiCreateUserResponse>> {
     const res = await handleMyFetch(
