@@ -1,11 +1,12 @@
 import { ResultErrors, ResultOk } from '../base/error';
+import { PassCryptoMode } from '../crypto/PassCryptoProxy';
 import { AuthLevel, User } from '../user_profile/UserProfile';
 
 //
 // POST /login
 export type ApiLoginRequest = {
   username: string;
-  crypto: string;
+  crypto: PassCryptoMode;
   generated: object;
 };
 export type ApiLoginResponse = ResultErrors | ResultOk;
@@ -38,12 +39,12 @@ export type ApiGetUsersResponse =
 export type ApiCreateUserRequest = {
   username: string;
   level: AuthLevel;
-  crypto: string;
+  crypto: PassCryptoMode;
   generated: object;
 };
 export type ApiCreateUserResponse =
   | ResultErrors
-  | (ResultOk & User & { crypto: string; generated: object });
+  | (ResultOk & User & { crypto: PassCryptoMode; generated: object });
 
 //
 // DELETE /user/:username

@@ -6,16 +6,10 @@ import {
 } from '../base/error';
 import { ResourceProvider } from './ResourceProvider';
 import {
-  AuthLevel,
   AuthLevelAdmin,
   isEditableAuthLevel,
-  User,
 } from '../user_profile/UserProfile';
-import { AppUserSession, kInvalidAppUserSession } from './AppUserSession';
-import {
-  convertToPassCryptoMode,
-  PassCryptoMode,
-} from '../crypto/PassCryptoProxy';
+import { AppUserSession } from './AppUserSession';
 import {
   ApiLoginRequest,
   ApiLoginResponse,
@@ -48,16 +42,11 @@ export class AppHandler {
       username,
       pass,
     };
-    // TODO: move to ApiSerializer
-    const crypto2 = convertToPassCryptoMode(crypto);
-    if (crypto2 === null) {
-      return { response: kResultInvalid, session: { ...session } };
-    }
 
     // Use standard user manager
     const res1 = await this.resource
       .getUserManager()
-      .testUser(username, crypto2, userInputForVerify);
+      .testUser(username, crypto, userInputForVerify);
     if (res1.ok === true) {
       return {
         response: { ok: true },
@@ -67,7 +56,7 @@ export class AppHandler {
     // Use privileged user manager
     const res2 = await this.resource
       .getPrivilegedUserManager()
-      .testUser(username, crypto2, userInputForVerify);
+      .testUser(username, crypto, userInputForVerify);
     if (res2.ok === true) {
       return {
         response: { ok: true },
@@ -122,11 +111,6 @@ export class AppHandler {
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
     }
-    // TODO: move to ApiSerializer
-    const crypto2 = convertToPassCryptoMode(crypto);
-    if (crypto2 === null) {
-      return kResultInvalid;
-    }
     // TODO: FIXME: easy implementation!
     const pass = (generated as any).pass ?? '';
 
@@ -140,7 +124,7 @@ export class AppHandler {
     // Create a user into the standard usermanager.
     const res1 = await this.resource
       .getUserManager()
-      .addUser({ username, level }, crypto2, { username, pass });
+      .addUser({ username, level }, crypto, { username, pass });
     if (res1.ok === false) {
       return res1;
     }

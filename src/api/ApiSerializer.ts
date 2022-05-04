@@ -1,4 +1,8 @@
 import { ResultErrors, validateResult } from '../base/error';
+import {
+  convertToPassCryptoMode,
+  PassCryptoMode,
+} from '../crypto/PassCryptoProxy';
 import { AuthLevel, validateAuthLevel } from '../user_profile/UserProfile';
 import {
   ApiLoginRequest,
@@ -160,7 +164,7 @@ export const ApiSerializerLogin: ApiSerializer<
 
   deserializeRequest: function (requestRaw: Serialized): {
     username: string;
-    crypto: string;
+    crypto: PassCryptoMode;
     generated: object;
   } | null {
     const request = validateType(requestRaw, [
@@ -173,8 +177,14 @@ export const ApiSerializerLogin: ApiSerializer<
       return null;
     }
     const username = request['username'];
-    const crypto = request['crypto'];
+    const cryptoRaw = request['crypto'];
     const generated = request['generated'];
+
+    const crypto = convertToPassCryptoMode(cryptoRaw);
+    if (crypto === null) {
+      console.warn('deserializeRequest failed due to convertToPassCryptoMode');
+      return null;
+    }
 
     return { username, crypto, generated };
   },
@@ -423,7 +433,7 @@ export const ApiSerializerCreateUser: ApiSerializer<
   deserializeRequest: function (requestRaw: Serialized): {
     username: string;
     level: AuthLevel;
-    crypto: string;
+    crypto: PassCryptoMode;
     generated: object;
   } | null {
     const request = validateType(requestRaw, [
@@ -437,11 +447,16 @@ export const ApiSerializerCreateUser: ApiSerializer<
       return null;
     }
     const username = request['username'];
-    const crypto = request['crypto'];
+    const cryptoRaw = request['crypto'];
     const generated = request['generated'];
     const level = validateAuthLevel(request['level']);
     if (level === undefined) {
       console.warn('deserializeResponse failed: level is invalid number');
+      return null;
+    }
+    const crypto = convertToPassCryptoMode(cryptoRaw);
+    if (crypto === null) {
+      console.warn('deserializeRequest failed due to convertToPassCryptoMode');
       return null;
     }
     return { username, level, crypto, generated };
@@ -454,7 +469,7 @@ export const ApiSerializerCreateUser: ApiSerializer<
           ok: true;
           username: string;
           level: AuthLevel;
-          crypto: string;
+          crypto: PassCryptoMode;
           generated: object;
         }
   ): Serialized {
@@ -467,7 +482,7 @@ export const ApiSerializerCreateUser: ApiSerializer<
         ok: true;
         username: string;
         level: AuthLevel;
-        crypto: string;
+        crypto: PassCryptoMode;
         generated: object;
       }
     | null {
@@ -496,11 +511,16 @@ export const ApiSerializerCreateUser: ApiSerializer<
 
     const username = validated['username'];
     const level = validateAuthLevel(validated['level']);
-    const crypto = validated['crypto'] as string;
+    const cryptoRaw = validated['crypto'];
     const generated = validated['generated'];
 
     if (level === undefined) {
       console.warn('deserializeResponse failed: level is invalid number');
+      return null;
+    }
+    const crypto = convertToPassCryptoMode(cryptoRaw);
+    if (crypto === null) {
+      console.warn('deserializeRequest failed due to convertToPassCryptoMode');
       return null;
     }
 
