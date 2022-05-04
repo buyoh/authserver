@@ -1,4 +1,10 @@
 import {
+  ApiLoginResponse,
+  ApiGetUsersResponse,
+  ApiCreateUserResponse,
+  ApiDeleteUserResponse,
+} from '../../api/Api';
+import {
   ApiSerializerCreateUser,
   ApiSerializerDeleteUser,
   ApiSerializerGetUsers,
@@ -12,9 +18,7 @@ export namespace WebApi {
     username,
     generated,
     crypto
-  ): Promise<
-    FetchResult<ReturnType<typeof ApiSerializerLogin.deserializeResponse>>
-  > {
+  ): Promise<FetchResult<ApiLoginResponse>> {
     const serialized = ApiSerializerLogin.serializeRequest({
       username,
       crypto,
@@ -51,7 +55,7 @@ export namespace WebApi {
   // }
 
   export async function fetchGetAllUser(): Promise<
-    FetchResult<ReturnType<typeof ApiSerializerGetUsers.deserializeResponse>>
+    FetchResult<ApiGetUsersResponse>
   > {
     const res = await handleMyFetch('/auth-portal/api/user', 'GET', {});
     if (res.ok === false) {
@@ -83,9 +87,7 @@ export namespace WebApi {
     level: AuthLevel,
     crypto: string,
     generated: object
-  ): Promise<
-    FetchResult<ReturnType<typeof ApiSerializerCreateUser.deserializeResponse>>
-  > {
+  ): Promise<FetchResult<ApiCreateUserResponse>> {
     const res = await handleMyFetch(
       '/auth-portal/api/user',
       'POST',
@@ -112,9 +114,7 @@ export namespace WebApi {
 
   export async function fetchDeleteUser(
     username: string
-  ): Promise<
-    FetchResult<ReturnType<typeof ApiSerializerDeleteUser.deserializeResponse>>
-  > {
+  ): Promise<FetchResult<ApiDeleteUserResponse>> {
     const res = await handleMyFetch(
       '/auth-portal/api/user/' + username,
       'DELETE',

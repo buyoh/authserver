@@ -1,5 +1,21 @@
 import { ResultErrors, validateResult } from '../base/error';
 import { AuthLevel, validateAuthLevel } from '../user_profile/UserProfile';
+import {
+  ApiLoginRequest,
+  ApiLoginResponse,
+  ApiLogoutRequest,
+  ApiLogoutResponse,
+  ApiGetMeRequest,
+  ApiGetMeResponse,
+  ApiGetUserRequest,
+  ApiGetUserResponse,
+  ApiGetUsersRequest,
+  ApiGetUsersResponse,
+  ApiCreateUserRequest,
+  ApiCreateUserResponse,
+  ApiDeleteUserRequest,
+  ApiDeleteUserResponse,
+} from './Api';
 
 //
 // interface
@@ -130,8 +146,8 @@ function validateResultErrors(
 //
 // POST /login
 export const ApiSerializerLogin: ApiSerializer<
-  { username: string; crypto: string; generated: object },
-  ResultErrors | { ok: true }
+  ApiLoginRequest,
+  ApiLoginResponse
 > = {
   // TODO: crypto: string -> PassCryptoMode
   serializeRequest: function ({ username, crypto, generated }) {
@@ -178,7 +194,10 @@ export const ApiSerializerLogin: ApiSerializer<
 
 //
 // POST /logout
-export const ApiSerializerLogout: ApiSerializer<{}, {}> = {
+export const ApiSerializerLogout: ApiSerializer<
+  ApiLogoutRequest,
+  ApiLogoutResponse
+> = {
   serializeRequest: function (request: {}): Serialized {
     return {};
   },
@@ -196,8 +215,8 @@ export const ApiSerializerLogout: ApiSerializer<{}, {}> = {
 //
 // GET /me
 export const ApiSerializerGetMe: ApiSerializer<
-  {},
-  ResultErrors | { ok: true; username: string; level: AuthLevel }
+  ApiGetMeRequest,
+  ApiGetMeResponse
 > = {
   serializeRequest: function (request: {}): Serialized {
     return {};
@@ -250,8 +269,8 @@ export const ApiSerializerGetMe: ApiSerializer<
 //
 // GET /user/:username
 export const ApiSerializerGetUser: ApiSerializer<
-  { username: string },
-  ResultErrors | { ok: true; username: string; level: AuthLevel }
+  ApiGetUserRequest,
+  ApiGetUserResponse
 > = {
   serializeRequest: function ({ username }): Serialized {
     return { username };
@@ -313,9 +332,8 @@ export const ApiSerializerGetUser: ApiSerializer<
 //
 // GET /user/
 export const ApiSerializerGetUsers: ApiSerializer<
-  {},
-  | ResultErrors
-  | { ok: true; data: { username: string; level: AuthLevel; me: boolean }[] }
+  ApiGetUsersRequest,
+  ApiGetUsersResponse
 > = {
   serializeRequest: function (request: {}): Serialized {
     return {};
@@ -390,15 +408,8 @@ export const ApiSerializerGetUsers: ApiSerializer<
 //
 // POST /user/
 export const ApiSerializerCreateUser: ApiSerializer<
-  { username: string; level: AuthLevel; crypto: string; generated: object },
-  | ResultErrors
-  | {
-      ok: true;
-      username: string;
-      level: AuthLevel;
-      crypto: string;
-      generated: object;
-    }
+  ApiCreateUserRequest,
+  ApiCreateUserResponse
 > = {
   serializeRequest: function ({
     username,
@@ -500,8 +511,8 @@ export const ApiSerializerCreateUser: ApiSerializer<
 //
 // DELETE /user/:username
 export const ApiSerializerDeleteUser: ApiSerializer<
-  { username: string },
-  ResultErrors | { ok: true }
+  ApiDeleteUserRequest,
+  ApiDeleteUserResponse
 > = {
   serializeRequest: function ({ username }): Serialized {
     return { username };
