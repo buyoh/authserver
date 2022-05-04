@@ -6,7 +6,7 @@ import OutputViewsConcreteForm from './OutputViewsConcreteForm';
 
 type Props = {
   mode: PassCryptoMode;
-  result: object;
+  result?: object;
 };
 
 type State = {};
@@ -21,12 +21,11 @@ class CreateUserResult extends React.Component<Props, State> {
     const concepts = sortedViewConceptsInternal(
       client.OutputViewConceptForGenerate()
     );
+    if (!this.props.result) {
+      return <></>;
+    }
     const values = client.createResultOfGenerate(this.props.result);
-    return (
-      <div>
-        <OutputViewsConcreteForm concepts={concepts} values={values} />
-      </div>
-    );
+    return <OutputViewsConcreteForm concepts={concepts} values={values} />;
   }
 }
 

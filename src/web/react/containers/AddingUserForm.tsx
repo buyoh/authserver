@@ -5,6 +5,7 @@ import {
   AuthLevelMember,
   authLevelToString,
   isEditableAuthLevel,
+  isValudUsername,
   kManageableAuthLevelList,
   User,
 } from '../../../user_profile/UserProfile';
@@ -30,8 +31,8 @@ async function addUser(
       data: {
         username: string;
         level: AuthLevel;
-        crypto: string;
-        result: any;
+        crypto: PassCryptoMode;
+        generated: object;
       };
     }
 > {
@@ -58,20 +59,19 @@ async function addUser(
   }
   return {
     ok: true,
-    data: {
-      username: res.result.username,
-      level: res.result.level,
-      crypto: res.result.crypto,
-      result: res.result.generated, // TODO:
-    },
+    data: res.result,
   };
 }
+
+//
 
 const passCryptoOptions = kPassCryptoList.map((t) => ({ label: t, value: t }));
 const authLevelOptions = kManageableAuthLevelList.map((l) => ({
   label: authLevelToString(l),
   value: `${l}`,
 }));
+
+//
 
 type Props = {};
 
@@ -119,9 +119,14 @@ class AddingUserForm extends React.Component<Props, State> {
         return;
       }
 
-      const result = JSON.stringify(res.data);
+      const resultLog = JSON.stringify(res.data);
       // TODO: display QRcode
-      this.setState({ ...this.state, resultLog: result });
+      const { username, crypto, generated } = res.data;
+      this.setState({
+        ...this.state,
+        resultLog,
+        createdUserResult: { username, crypto, result: generated },
+      });
 
       // await is not needed
       fetchUserList();
@@ -181,7 +186,14 @@ class AddingUserForm extends React.Component<Props, State> {
         <pre>
           <output className="highlight">{this.state.resultLog}</output>
         </pre>
-        <CreateUserResult mode={'otpauth'} result={undefined} />
+        {this.state.createdUserResult ? (
+          <CreateUserResult
+            mode={this.state.createdUserResult.crypto}
+            result={this.state.createdUserResult.result}
+          />
+        ) : (
+          <></>
+        )}
       </div>
     );
   }

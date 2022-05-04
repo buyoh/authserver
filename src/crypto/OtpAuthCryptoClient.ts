@@ -37,7 +37,7 @@ export const OtpAuthCryptoClientImpl: PassCryptoClientImpl<
   createResultOfGenerate: function (result: OtpAuthCryptoResultOfGenerate): {
     [key: string]: string;
   } {
-    return {};
+    return { otpauth_url: result.otpauth_url };
   },
   createUserInputForVerify: function (
     username: string,
