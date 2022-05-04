@@ -33,20 +33,10 @@ export class AppHandler {
     session: AppUserSession,
     { username, crypto, generated }: ApiLoginRequest
   ): Promise<{ response: ApiLoginResponse; session: AppUserSession }> {
-    // TODO: pass ではなく、UserInputForVerify であるべき。
-    // パスワード以外の何かを要求することは少ないと推測。
-    // 現状のインターフェースでも影響は少なそう。
-    // TODO: FIXME: easy implementation!
-    const pass = (generated as any).pass ?? '';
-    const userInputForVerify = {
-      username,
-      pass,
-    };
-
     // Use standard user manager
     const res1 = await this.resource
       .getUserManager()
-      .testUser(username, crypto, userInputForVerify);
+      .testUser(username, crypto, generated);
     if (res1.ok === true) {
       return {
         response: { ok: true },
@@ -56,7 +46,7 @@ export class AppHandler {
     // Use privileged user manager
     const res2 = await this.resource
       .getPrivilegedUserManager()
-      .testUser(username, crypto, userInputForVerify);
+      .testUser(username, crypto, generated);
     if (res2.ok === true) {
       return {
         response: { ok: true },
@@ -111,8 +101,6 @@ export class AppHandler {
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
     }
-    // TODO: FIXME: easy implementation!
-    const pass = (generated as any).pass ?? '';
 
     // Avoid keeping the same username in both usermanagers.
     const res0 = await this.resource
@@ -124,7 +112,7 @@ export class AppHandler {
     // Create a user into the standard usermanager.
     const res1 = await this.resource
       .getUserManager()
-      .addUser({ username, level }, crypto, { username, pass });
+      .addUser({ username, level }, crypto, generated);
     if (res1.ok === false) {
       return res1;
     }
