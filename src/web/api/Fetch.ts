@@ -4,7 +4,7 @@ export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'; // 'HEAD'
 
 export interface FetchResultOk<T> {
   ok: true;
-  result: (ResultOk & T) | ResultErrors;
+  result: T;
   response: Response;
 }
 export interface FetchResultError {
@@ -47,10 +47,9 @@ export async function handleMyFetch(
         return { ok: true, result: { ok: true }, response };
       }
       const json = await response.json();
-      const v = validateResult(json);
-      if (v) return { ok: true, result: v, response };
-      else return { ok: false, response };
+      return { ok: true, result: json, response };
     } else {
+      console.warn('unexpected status code: ', status, response);
       return { ok: false, response };
     }
   } catch (e) {

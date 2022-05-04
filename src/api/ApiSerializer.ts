@@ -1,45 +1,131 @@
 import { ResultErrors, validateResult } from '../base/error';
 import { AuthLevel, validateAuthLevel } from '../user_profile/UserProfile';
 
-function safeJSONparse(text: string): [boolean, object] {
-  try {
-    const o = JSON.parse(text);
-    if (typeof o !== 'object') return [false, new Error('It is not object')];
-    return [true, o];
-  } catch (e) {
-    return [false, e];
-  }
-}
+//
+// interface
+//
 
-function checkType(
-  o: object,
-  types: { name: string; typeName: string }[]
-): boolean {
-  for (let value of types) {
-    if (typeof o[value.name] != value.typeName) {
-      console.warn(
-        'checkType failed: key=',
-        value.name,
-        'expectedTypeName=',
-        value.typeName,
-        'actualTypename=',
-        typeof o[value.name]
-      );
-      return false;
-    }
-  }
-  return true;
-}
+type Serialized = { [key: string]: string };
 
 // AppExpress - WebApi の接合に当たるもの
 // HTTPリクエストのvalidationに使う。
 
 interface ApiSerializer<Request, Response> {
-  serializeRequest(request: Request): string;
-  deserializeRequest(requestRaw: string): Request | null;
-  serializeResponse(response: Response): string;
-  deserializeResponse(responseRaw: string): Response | null;
+  serializeRequest(request: Request): Serialized;
+  deserializeRequest(requestRaw: Serialized): Request | null;
+  serializeResponse(response: Response): Serialized;
+  deserializeResponse(responseRaw: Serialized): Response | null;
 }
+
+//
+// internal
+//
+
+function validateObject(
+  rawValue: string,
+  typeName: 'string' | 'boolean' | 'number' | 'object' | 'array' | 'null',
+  key?: string
+): any {
+  // string: special case!
+  if (typeName === 'string') {
+    return rawValue;
+  }
+
+  let result = undefined;
+  try {
+    result = JSON.parse(rawValue);
+  } catch (e) {
+    console.warn(
+      'validateType failed: JSON.parse throw an error: key=',
+      key,
+      'expectedTypeName=',
+      typeName,
+      'rawValue=',
+      rawValue,
+      'error:',
+      e
+    );
+    return null;
+  }
+  if (typeof result != typeName) {
+    console.warn(
+      'validateType failed: key=',
+      key,
+      'expectedTypeName=',
+      typeName,
+      'actualTypename=',
+      typeof result
+    );
+    return null;
+  }
+  return result;
+}
+
+function validateType(
+  o: Serialized,
+  types: {
+    name: string;
+    // NOTE: array -> object
+    typeName: 'string' | 'boolean' | 'number' | 'object' | 'null';
+    optional?: boolean;
+  }[]
+): { [key: string]: any } | null {
+  const gen = {} as { [key: string]: any };
+  for (let { name, typeName, optional } of types) {
+    if (o[name] === undefined) {
+      if (optional) continue;
+      console.warn(
+        'validateType failed: missing value: key=',
+        name,
+        'expectedTypeName=',
+        typeName,
+        o
+      );
+      return null;
+    }
+    gen[name] = validateObject(o[name], typeName, name);
+  }
+  return gen;
+}
+
+function serialize(o: { [key: string]: any }): Serialized {
+  const gen = {} as Serialized;
+  for (let key in o) {
+    const v = o[key];
+    if (v === undefined) continue;
+    if (typeof v === 'string') {
+      gen[key] = v;
+    } else {
+      gen[key] = JSON.stringify(v);
+    }
+  }
+  return gen;
+}
+
+function validateResultErrors(
+  o: Serialized
+): ResultErrors | { ok: true } | null {
+  const validated1 = validateType(o, [{ name: 'ok', typeName: 'boolean' }]);
+  if (!validated1) {
+    return null;
+  }
+  if (validated1.ok === true) {
+    return { ok: true };
+  }
+  const validated2 = validateType(o, [
+    { name: 'result', typeName: 'string' },
+    { name: 'detail', typeName: 'string', optional: true },
+  ]);
+  if (!validated2) {
+    console.warn('validateResultErrors failed: ', o);
+    return null;
+  }
+  return validateResult({ ...validated2, ok: false });
+}
+
+//
+// implements
+//
 
 //
 // POST /login
@@ -47,81 +133,62 @@ export const ApiSerializerLogin: ApiSerializer<
   { username: string; crypto: string; generated: object },
   ResultErrors | { ok: true }
 > = {
+  // TODO: crypto: string -> PassCryptoMode
   serializeRequest: function ({ username, crypto, generated }) {
-    return JSON.stringify({
+    return {
       username,
       crypto,
       generated: JSON.stringify(generated),
-    });
+    };
   },
 
-  deserializeRequest: function (requestRaw: string): {
+  deserializeRequest: function (requestRaw: Serialized): {
     username: string;
     crypto: string;
     generated: object;
-  } {
-    const [jr1, json] = safeJSONparse(requestRaw);
-    if (!jr1) {
-      console.warn('deserializeRequest failed:', json);
+  } | null {
+    const request = validateType(requestRaw, [
+      { name: 'username', typeName: 'string' },
+      { name: 'crypto', typeName: 'string' },
+      { name: 'generated', typeName: 'object' },
+    ]);
+    if (!request) {
+      console.warn('deserializeRequest failed due to validateType');
       return null;
     }
-    if (
-      !checkType(json, [
-        { name: 'username', typeName: 'string' },
-        { name: 'crypto', typeName: 'string' },
-        { name: 'generated', typeName: 'string' },
-      ])
-    ) {
-      console.warn('deserializeRequest failed due to checkType');
-      return null;
-    }
-    const username = json['username'];
-    const crypto = json['crypto'];
-    const generatedRaw = json['generated'];
+    const username = request['username'];
+    const crypto = request['crypto'];
+    const generated = request['generated'];
 
-    const [jr2, generated] = safeJSONparse(generatedRaw);
-    if (!jr2) {
-      console.warn('deserializeRequest failed(generated):', json);
-      return null;
-    }
     return { username, crypto, generated };
   },
 
-  serializeResponse: function (response: ResultErrors | { ok: true }): string {
-    return JSON.stringify(response);
+  serializeResponse: function (
+    response: ResultErrors | { ok: true }
+  ): Serialized {
+    return serialize(response);
   },
 
   deserializeResponse: function (
-    responseRaw: string
-  ): ResultErrors | { ok: true } {
-    const [jr1, mayResponse] = safeJSONparse(responseRaw);
-    if (!jr1) {
-      console.warn('deserializeResponse failed:', mayResponse);
-      return null;
-    }
-    const response = validateResult(mayResponse);
-    if (!response) {
-      console.warn('deserializeResponse failed: invalid result');
-      return null;
-    }
-
-    return response;
+    responseRaw: Serialized
+  ): ResultErrors | { ok: true } | null {
+    return validateResultErrors(responseRaw);
   },
 };
 
 //
 // POST /logout
 export const ApiSerializerLogout: ApiSerializer<{}, {}> = {
-  serializeRequest: function (request: {}): string {
-    return '';
-  },
-  deserializeRequest: function (requestRaw: string): {} {
+  serializeRequest: function (request: {}): Serialized {
     return {};
   },
-  serializeResponse: function (response: {}): string {
-    return ''; // no contents
+  deserializeRequest: function (requestRaw: Serialized): {} {
+    return {};
   },
-  deserializeResponse: function (responseRaw: string): {} {
+  serializeResponse: function (response: {}): Serialized {
+    return {}; // no contents
+  },
+  deserializeResponse: function (responseRaw: Serialized): {} {
     return {};
   },
 };
@@ -132,51 +199,45 @@ export const ApiSerializerGetMe: ApiSerializer<
   {},
   ResultErrors | { ok: true; username: string; level: AuthLevel }
 > = {
-  serializeRequest: function (request: {}): string {
-    return '';
+  serializeRequest: function (request: {}): Serialized {
+    return {};
   },
 
-  deserializeRequest: function (requestRaw: string): {} {
+  deserializeRequest: function (requestRaw: Serialized): {} {
     return {};
   },
 
   serializeResponse: function (
     response: ResultErrors | { ok: true; username: string; level: AuthLevel }
-  ): string {
-    return JSON.stringify(response);
+  ): Serialized {
+    return serialize(response);
   },
 
   deserializeResponse: function (
-    responseRaw: string
-  ): ResultErrors | { ok: true; username: string; level: AuthLevel } {
-    const [jr1, mayResponse] = safeJSONparse(responseRaw);
-    if (!jr1) {
-      console.warn('deserializeResponse failed:', mayResponse);
-      return null;
-    }
-    const response = validateResult(mayResponse);
-    if (!response) {
-      console.warn('deserializeResponse failed: invalid result');
+    responseRaw: Serialized
+  ): ResultErrors | { ok: true; username: string; level: AuthLevel } | null {
+    const response = validateResultErrors(responseRaw);
+    if (response === null) {
+      console.warn('deserializeResponse failed due to validateResultErrors');
       return null;
     }
 
     if (response.ok === false) {
-      return response; // Invalid case
+      // return as ResultErrors
+      return response;
     }
 
-    if (
-      !checkType(response, [
-        { name: 'username', typeName: 'string' },
-        { name: 'level', typeName: 'number' },
-      ])
-    ) {
+    const validated = validateType(responseRaw, [
+      { name: 'username', typeName: 'string' },
+      { name: 'level', typeName: 'number' },
+    ]);
+    if (!validated) {
       console.warn('deserializeResponse failed due to checkType');
       return null;
     }
 
-    const username = response['username'] as string;
-    const level = validateAuthLevel(response['level']);
-
+    const username = validated['username'];
+    const level = validateAuthLevel(validated['level']);
     if (level === undefined) {
       console.warn('deserializeResponse failed: level is invalid number');
       return null;
@@ -192,62 +253,54 @@ export const ApiSerializerGetUser: ApiSerializer<
   { username: string },
   ResultErrors | { ok: true; username: string; level: AuthLevel }
 > = {
-  serializeRequest: function ({ username }): string {
-    return JSON.stringify({ username });
+  serializeRequest: function ({ username }): Serialized {
+    return { username };
   },
 
-  deserializeRequest: function (requestRaw: string): { username: string } {
-    const [jr1, request] = safeJSONparse(requestRaw);
-    if (!jr1) {
-      console.warn('deserializeRequest failed:', request);
+  deserializeRequest: function (
+    requestRaw: Serialized
+  ): { username: string } | null {
+    const validated = validateType(requestRaw, [
+      { name: 'username', typeName: 'string' },
+    ]);
+    if (!validated) {
+      console.warn('deserializeRequest failed due to validateType');
       return null;
     }
-    if (!checkType(request, [{ name: 'username', typeName: 'string' }])) {
-      console.warn('deserializeRequest failed due to checkType');
-      return null;
-    }
-    const username = request['username'];
-
-    return { username };
+    return { username: validated['username'] };
   },
 
   serializeResponse: function (
     response: ResultErrors | { ok: true; username: string; level: AuthLevel }
-  ): string {
-    return JSON.stringify(response);
+  ): Serialized {
+    return serialize(response);
   },
 
   deserializeResponse: function (
-    responseRaw: string
-  ): ResultErrors | { ok: true; username: string; level: AuthLevel } {
-    const [jr1, mayResponse] = safeJSONparse(responseRaw);
-    if (!jr1) {
-      console.warn('deserializeResponse failed:', mayResponse);
-      return null;
-    }
-    const response = validateResult(mayResponse);
-    if (!response) {
-      console.warn('deserializeResponse failed: invalid result');
+    responseRaw: Serialized
+  ): ResultErrors | { ok: true; username: string; level: AuthLevel } | null {
+    const response = validateResultErrors(responseRaw);
+    if (response === null) {
+      console.warn('deserializeResponse failed due to validateResultErrors');
       return null;
     }
 
     if (response.ok === false) {
-      return response; // Invalid case
+      // return as ResultErrors
+      return response;
     }
 
-    if (
-      !checkType(response, [
-        { name: 'username', typeName: 'string' },
-        { name: 'level', typeName: 'number' },
-      ])
-    ) {
+    const validated = validateType(responseRaw, [
+      { name: 'username', typeName: 'string' },
+      { name: 'level', typeName: 'number' },
+    ]);
+    if (!validated) {
       console.warn('deserializeResponse failed due to checkType');
       return null;
     }
 
-    const username = response['username'] as string;
-    const level = validateAuthLevel(response['level']);
-
+    const username = validated['username'];
+    const level = validateAuthLevel(validated['level']);
     if (level === undefined) {
       console.warn('deserializeResponse failed: level is invalid number');
       return null;
@@ -264,12 +317,13 @@ export const ApiSerializerGetUsers: ApiSerializer<
   | ResultErrors
   | { ok: true; data: { username: string; level: AuthLevel; me: boolean }[] }
 > = {
-  serializeRequest: function (request: {}): string {
-    return '';
-  },
-  deserializeRequest: function (requestRaw: string): {} {
+  serializeRequest: function (request: {}): Serialized {
     return {};
   },
+  deserializeRequest: function (requestRaw: Serialized): {} {
+    return {};
+  },
+
   serializeResponse: function (
     response:
       | ResultErrors
@@ -277,61 +331,59 @@ export const ApiSerializerGetUsers: ApiSerializer<
           ok: true;
           data: { username: string; level: AuthLevel; me: boolean }[];
         }
-  ): string {
-    return JSON.stringify(response);
+  ): Serialized {
+    return serialize(response);
   },
-  deserializeResponse: function (responseRaw: string):
+
+  deserializeResponse: function (responseRaw: Serialized):
     | ResultErrors
     | {
         ok: true;
         data: { username: string; level: AuthLevel; me: boolean }[];
-      } {
-    const [jr1, mayResponse] = safeJSONparse(responseRaw);
-    if (!jr1) {
-      console.warn('deserializeResponse failed:', mayResponse);
-      return null;
-    }
-    const response = validateResult(mayResponse);
-    if (!response) {
-      console.warn('deserializeResponse failed: invalid result');
+      }
+    | null {
+    const response = validateResultErrors(responseRaw);
+    if (response === null) {
+      console.warn('deserializeResponse failed due to validateResultErrors');
       return null;
     }
 
     if (response.ok === false) {
-      return response; // Invalid case
+      // return as ResultErrors
+      return response;
     }
 
-    if (!checkType(response, [{ name: 'data', typeName: 'array' }])) {
+    const validated = validateType(responseRaw, [
+      { name: 'data', typeName: 'object' },
+    ]);
+    if (!validated) {
       console.warn('deserializeResponse failed due to checkType');
       return null;
     }
-    const mayData = response['data'] as object[];
 
-    const badEntry = mayData.find(
-      (entry) =>
-        !checkType(entry, [
-          { name: 'username', typeName: 'string' },
-          { name: 'level', typeName: 'number' },
-          { name: 'me', typeName: 'boolean' },
-        ]) || !validateAuthLevel(entry['level'])
-    );
+    const mayData = (validated['data'] as any[]).map((entry) => {
+      // entry is not `Serialized` (may have number, boolean) so we cannot use validateType
+      const username = entry['username'];
+      const levelN = entry['level'];
+      const me = entry['me'];
+      if (
+        typeof username !== 'string' ||
+        typeof levelN !== 'number' ||
+        typeof me !== 'boolean'
+      )
+        return null;
+      const level = validateAuthLevel(levelN);
+      if (level === undefined) return null;
+      return { username, level, me };
+    });
 
-    if (badEntry) {
-      console.warn(
-        'deserializeResponse failed due to checkType data:',
-        mayResponse
-      );
+    if (mayData.find((e) => e === null)) {
+      console.warn('deserializeResponse failed due to check type:', validated);
       return null;
     }
 
-    const data = (
-      mayData as { username: string; level: string; me: boolean }[]
-    ).map(({ username, level, me }) => ({
-      username,
-      level: validateAuthLevel(level),
-      me,
-    }));
-    return { ok: true, data };
+    // NOTE: mayData does not have null
+    return { ok: true, data: mayData as any };
   },
 };
 
@@ -348,48 +400,39 @@ export const ApiSerializerCreateUser: ApiSerializer<
       generated: object;
     }
 > = {
-  serializeRequest: function ({ username, level, crypto, generated }): string {
-    return JSON.stringify({ username, level, crypto, generated });
+  serializeRequest: function ({
+    username,
+    level,
+    crypto,
+    generated,
+  }): Serialized {
+    return serialize({ username, level, crypto, generated });
   },
 
-  deserializeRequest: function (requestRaw: string): {
+  deserializeRequest: function (requestRaw: Serialized): {
     username: string;
     level: AuthLevel;
     crypto: string;
     generated: object;
-  } {
-    const [jr1, request] = safeJSONparse(requestRaw);
-    if (!jr1) {
-      console.warn('deserializeRequest failed:', request);
-      return null;
-    }
-    if (
-      !checkType(request, [
-        { name: 'username', typeName: 'string' },
-        { name: 'level', typeName: 'number' },
-        { name: 'crypto', typeName: 'string' },
-        { name: 'generated', typeName: 'string' },
-      ])
-    ) {
-      console.warn('deserializeRequest failed due to checkType');
+  } | null {
+    const request = validateType(requestRaw, [
+      { name: 'username', typeName: 'string' },
+      { name: 'level', typeName: 'number' },
+      { name: 'crypto', typeName: 'string' },
+      { name: 'generated', typeName: 'object' },
+    ]);
+    if (!request) {
+      console.warn('deserializeRequest failed due to validateType');
       return null;
     }
     const username = request['username'];
     const crypto = request['crypto'];
-    const generatedRaw = request['generated'];
+    const generated = request['generated'];
     const level = validateAuthLevel(request['level']);
-
     if (level === undefined) {
       console.warn('deserializeResponse failed: level is invalid number');
       return null;
     }
-
-    const [jr2, generated] = safeJSONparse(generatedRaw);
-    if (!jr2) {
-      console.warn('deserializeRequest failed(generated):', request);
-      return null;
-    }
-
     return { username, level, crypto, generated };
   },
 
@@ -403,11 +446,11 @@ export const ApiSerializerCreateUser: ApiSerializer<
           crypto: string;
           generated: object;
         }
-  ): string {
-    return JSON.stringify(response);
+  ): Serialized {
+    return serialize(response);
   },
 
-  deserializeResponse: function (responseRaw: string):
+  deserializeResponse: function (responseRaw: Serialized):
     | ResultErrors
     | {
         ok: true;
@@ -415,47 +458,38 @@ export const ApiSerializerCreateUser: ApiSerializer<
         level: AuthLevel;
         crypto: string;
         generated: object;
-      } {
-    const [jr1, mayResponse] = safeJSONparse(responseRaw);
-    if (!jr1) {
-      console.warn('deserializeResponse failed:', mayResponse);
-      return null;
-    }
-    const response = validateResult(mayResponse);
-    if (!response) {
-      console.warn('deserializeResponse failed: invalid result');
+      }
+    | null {
+    const response = validateResultErrors(responseRaw);
+    if (response === null) {
+      console.warn('deserializeResponse failed due to validateResultErrors');
       return null;
     }
 
     if (response.ok === false) {
-      return response; // Invalid case
+      // return as ResultErrors
+      return response;
     }
 
-    if (
-      !checkType(response, [
-        { name: 'username', typeName: 'string' },
-        { name: 'level', typeName: 'number' },
-        { name: 'crypto', typeName: 'string' },
-        { name: 'generated', typeName: 'string' },
-      ])
-    ) {
+    const validated = validateType(responseRaw, [
+      { name: 'username', typeName: 'string' },
+      { name: 'level', typeName: 'number' },
+      { name: 'crypto', typeName: 'string' },
+      { name: 'generated', typeName: 'object' },
+    ]);
+    if (!validated) {
       console.warn('deserializeResponse failed due to checkType');
       return null;
     }
+    console.log(validated, responseRaw);
 
-    const username = response['username'] as string;
-    const level = validateAuthLevel(response['level']);
-    const crypto = response['crypto'] as string;
-    const generatedRaw = response['generated'] as string;
+    const username = validated['username'];
+    const level = validateAuthLevel(validated['level']);
+    const crypto = validated['crypto'] as string;
+    const generated = validated['generated'];
 
     if (level === undefined) {
       console.warn('deserializeResponse failed: level is invalid number');
-      return null;
-    }
-
-    const [jr2, generated] = safeJSONparse(generatedRaw);
-    if (!jr2) {
-      console.warn('deserializeResponse failed:', mayResponse);
       return null;
     }
 
@@ -469,43 +503,32 @@ export const ApiSerializerDeleteUser: ApiSerializer<
   { username: string },
   ResultErrors | { ok: true }
 > = {
-  serializeRequest: function ({ username }): string {
-    return JSON.stringify({ username });
-  },
-
-  deserializeRequest: function (requestRaw: string): { username: string } {
-    const [jr1, request] = safeJSONparse(requestRaw);
-    if (!jr1) {
-      console.warn('deserializeRequest failed:', request);
-      return null;
-    }
-    if (!checkType(request, [{ name: 'username', typeName: 'string' }])) {
-      console.warn('deserializeRequest failed due to checkType');
-      return null;
-    }
-    const username = request['username'];
-
+  serializeRequest: function ({ username }): Serialized {
     return { username };
   },
 
-  serializeResponse: function (response: ResultErrors | { ok: true }): string {
-    return JSON.stringify(response);
+  deserializeRequest: function (
+    requestRaw: Serialized
+  ): { username: string } | null {
+    const validated = validateType(requestRaw, [
+      { name: 'username', typeName: 'string' },
+    ]);
+    if (!validated) {
+      console.warn('deserializeRequest failed due to validateType');
+      return null;
+    }
+    return { username: validated['username'] };
+  },
+
+  serializeResponse: function (
+    response: ResultErrors | { ok: true }
+  ): Serialized {
+    return serialize(response);
   },
 
   deserializeResponse: function (
-    responseRaw: string
-  ): ResultErrors | { ok: true } {
-    const [jr1, mayResponse] = safeJSONparse(responseRaw);
-    if (!jr1) {
-      console.warn('deserializeResponse failed:', mayResponse);
-      return null;
-    }
-    const response = validateResult(mayResponse);
-    if (!response) {
-      console.warn('deserializeResponse failed: invalid result');
-      return null;
-    }
-
-    return response;
+    responseRaw: Serialized
+  ): ResultErrors | { ok: true } | null {
+    return validateResultErrors(responseRaw);
   },
 };

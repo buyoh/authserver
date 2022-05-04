@@ -14,6 +14,14 @@ import {
 } from './WebContentsServer';
 import { AppConfig } from './AppConfig';
 import { convertToPassCryptoMode } from '../crypto/PassCryptoProxy';
+import {
+  ApiSerializerCreateUser,
+  ApiSerializerDeleteUser,
+  ApiSerializerGetMe,
+  ApiSerializerGetUser,
+  ApiSerializerGetUsers,
+  ApiSerializerLogin,
+} from '../api/ApiSerializer';
 
 //
 
@@ -128,18 +136,21 @@ export class AppExpress {
     // --------------------------
 
     app.post('/auth-portal/api/login', (req, res) => {
-      const username = req.body.username;
-      const generated = req.body.generated;
+      const validated = ApiSerializerLogin.deserializeRequest(req.body);
+      if (!validated) {
+        handleGenericError(req, res, kResultInvalid);
+        return;
+      }
+      const username = validated.username;
+      const generated = validated.generated;
+      const cryptoRaw = validated.crypto;
       // TODO: FIXME: easy implementation!
-      const pass = JSON.parse(generated).pass ?? '';
-      console.log('generated:', generated);
+      const pass = (generated as any).pass ?? '';
 
-      const crypto = convertToPassCryptoMode(req.body.crypto);
-      if (
-        typeof username != 'string' ||
-        typeof pass != 'string' ||
-        crypto === null
-      ) {
+      // TODO: move to ApiSerializer
+      const crypto = convertToPassCryptoMode(cryptoRaw);
+      if (crypto === null) {
+        // TODO: handleGenericError also use ApiSerializerLogin.serializeResponse
         handleGenericError(req, res, kResultInvalid);
         return;
       }
@@ -149,7 +160,10 @@ export class AppExpress {
         .login(prevSession, username, pass, crypto)
         .then((res1) => {
           if (res1.ok === false) {
-            handleGenericError(req, res, res1);
+            // TODO: bugfix
+            // result をセットしないケースがある
+            // handleGenericError(req, res, res1);
+            handleGenericError(req, res, kResultInvalid);
             return;
           }
           if (req.session === undefined) {
@@ -158,8 +172,12 @@ export class AppExpress {
           }
           req.session.regenerate((_err) => {
             Object.assign(req.session, res1.session);
-            res.status(204); // no content
-            res.send();
+            res.status(200);
+            res.json(
+              ApiSerializerLogin.serializeResponse({
+                ok: true,
+              })
+            );
           });
         })
         .catch((e) => handleInternalError(req, res, e));
@@ -197,10 +215,9 @@ export class AppExpress {
       } else {
         res.status(200);
         const { username, level } = session;
-        // TODO: {ok, data: {username, level}}
-        // 統一されてないのは良くない。
-        // array を返したいケースを考慮すると、子要素にしたほうが良さそう
-        res.json({ ok: true, username, level });
+        res.json(
+          ApiSerializerGetMe.serializeResponse({ ok: true, username, level })
+        );
       }
     });
 
@@ -208,16 +225,20 @@ export class AppExpress {
 
     // Get a user
     app.get('/auth-portal/api/user/:username', (req, res) => {
-      const { username } = req.params;
       const session = validateAppUserSession(req.session);
       if (!isLoggedIn(session)) {
         handleUnauthorized(res);
         return;
       }
-      if (typeof username != 'string') {
+      const validated = ApiSerializerGetUser.deserializeRequest({
+        username: req.params.username,
+      });
+      if (!validated) {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
+      const username = validated.username;
+
       this.appHandler
         .getUser(session, username)
         .then((res1) => {
@@ -226,10 +247,13 @@ export class AppExpress {
             return;
           }
           res.status(200);
-          res.json({
-            ok: true,
-            data: { username: res1.username, level: res1.level },
-          });
+          res.json(
+            ApiSerializerGetUser.serializeResponse({
+              ok: true,
+              username: res1.username,
+              level: res1.level,
+            })
+          );
         })
         .catch((e) => handleInternalError(req, res, e));
     });
@@ -251,14 +275,16 @@ export class AppExpress {
             return;
           }
           res.status(200);
-          res.json({
-            ok: true,
-            data: res1.data.map((e) => ({
-              level: e.level,
-              username: e.username,
-              me: e.me,
-            })),
-          });
+          res.json(
+            ApiSerializerGetUsers.serializeResponse({
+              ok: true,
+              data: res1.data.map((e) => ({
+                level: e.level,
+                username: e.username,
+                me: e.me,
+              })),
+            })
+          );
         })
         .catch((e) => handleInternalError(req, res, e));
     });
@@ -272,19 +298,21 @@ export class AppExpress {
         handleUnauthorized(res);
         return;
       }
-      const username = req.body.username;
-      const level = validateAuthLevel(parseInt(req.body.level));
-      const crypto = convertToPassCryptoMode(req.body.crypto);
-      // TODO: FIXME: easy implementation!
-      const generated = req.body.generated;
-      const pass = JSON.parse(generated).pass ?? '';
-      console.log('generated:', generated);
+      const validated = ApiSerializerCreateUser.deserializeRequest(req.body);
+      if (!validated) {
+        handleGenericError(req, res, kResultInvalid);
+        return;
+      }
 
-      if (
-        typeof username != 'string' ||
-        level === undefined ||
-        crypto === null
-      ) {
+      const username = validated.username;
+      const level = validated.level;
+      const crypto = convertToPassCryptoMode(validated.crypto);
+      const generated = validated.generated;
+      // TODO: FIXME: easy implementation!
+      const pass = (generated as any).pass ?? '';
+      // console.log('generated:', generated);
+
+      if (crypto === null) {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
@@ -296,15 +324,16 @@ export class AppExpress {
             return;
           }
           res.status(200);
-          res.json({
-            ok: true,
-            data: {
+          res.json(
+            ApiSerializerCreateUser.serializeResponse({
+              ok: true,
               username,
               level,
               crypto: res1.crypto,
-              result: res1.result,
-            },
-          });
+              // TODO: res1.result? It seems to need refactorings
+              generated: res1.result as object,
+            })
+          );
         })
         .catch((e) => handleInternalError(req, res, e));
     });
@@ -313,16 +342,19 @@ export class AppExpress {
 
     // Delete user
     app.delete('/auth-portal/api/user/:username', (req, res) => {
-      const { username } = req.params;
       const session = validateAppUserSession(req.session);
       if (!isLoggedIn(session)) {
         handleUnauthorized(res);
         return;
       }
-      if (typeof username != 'string') {
+      const validated = ApiSerializerDeleteUser.deserializeRequest({
+        username: req.params.username,
+      });
+      if (!validated) {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
+      const username = validated.username;
       this.appHandler
         .deleteUser(session, username)
         .then((res1) => {
@@ -330,8 +362,8 @@ export class AppExpress {
             handleGenericError(req, res, res1);
             return;
           }
-          res.status(204);
-          res.send();
+          res.status(200);
+          res.json(ApiSerializerDeleteUser.serializeResponse({ ok: true }));
         })
         .catch((e) => handleInternalError(req, res, e));
     });

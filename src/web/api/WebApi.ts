@@ -1,17 +1,44 @@
+import {
+  ApiSerializerCreateUser,
+  ApiSerializerDeleteUser,
+  ApiSerializerGetUsers,
+  ApiSerializerLogin,
+} from '../../api/ApiSerializer';
 import { AuthLevel } from '../../user_profile/UserProfile';
 import { FetchResult, handleMyFetch, myFetch } from './Fetch';
 
 export namespace WebApi {
-  // TODO: REFACTORING
-  export function fetchLogin(username, generated, crypto) {
-    return myFetch('/auth-portal/api/login', 'POST', {
+  export async function fetchLogin(
+    username,
+    generated,
+    crypto
+  ): Promise<
+    FetchResult<ReturnType<typeof ApiSerializerLogin.deserializeResponse>>
+  > {
+    const serialized = ApiSerializerLogin.serializeRequest({
       username,
-      generated: JSON.stringify(generated),
       crypto,
+      generated,
     });
+    const res = await handleMyFetch(
+      '/auth-portal/api/login',
+      'POST',
+      serialized
+    );
+    if (res.ok === false) {
+      // network error
+      return res;
+    }
+    const validated = ApiSerializerLogin.deserializeResponse(res.result as any);
+    if (!validated) {
+      // validation error
+      return { ok: false, response: res.response };
+    }
+    return { ok: true, result: validated, response: res.response };
   }
 
   export function fetchLogout() {
+    // TODO: REFACTORING
     return myFetch('/auth-portal/api/logout', 'POST', {});
   }
 
@@ -19,33 +46,26 @@ export namespace WebApi {
   //   FetchResult<{ username: string; level: AuthLevel }>
   // > {
   //   const res = await handleMyFetch('/auth-portal/api/me', 'GET', {});
-  //   if (res.ok && res.result.ok) {
-  //     if (
-  //       typeof res.result['username'] == 'string' &&
-  //       typeof res.result['level'] == 'number'
-  //     ) {
-  //       const level = validateAuthLevel(res.result['level']);
-  //       if (level !== undefined) {
-  //         return res;
-  //       }
-  //     }
-  //     console.log('validation failed');
-  //     res.result = { ok: false, result: 'invalid' };
-  //   }
+  //   // TODO:
   //   return res;
   // }
 
   export async function fetchGetAllUser(): Promise<
-    FetchResult<{
-      data: [{ username: string; level: AuthLevel; me: boolean }];
-    }>
+    FetchResult<ReturnType<typeof ApiSerializerGetUsers.deserializeResponse>>
   > {
     const res = await handleMyFetch('/auth-portal/api/user', 'GET', {});
-    if (res.ok && res.result.ok) {
-      // TODO: validate
+    if (res.ok === false) {
+      // network error
       return res;
     }
-    return res;
+    const validated = ApiSerializerGetUsers.deserializeResponse(
+      res.result as any
+    );
+    if (!validated) {
+      // validation error
+      return { ok: false, response: res.response };
+    }
+    return { ok: true, result: validated, response: res.response };
   }
 
   // export async function fetchGetUser(username: string): Promise<
@@ -54,10 +74,7 @@ export namespace WebApi {
   //   }>
   // > {
   //   const res = await handleMyFetch('/auth-portal/api/user/'+username, 'GET', {});
-  //   if (res.ok && res.result.ok) {
-  //     // TODO: validate
-  //     return res;
-  //   }
+  //   // TODO:
   //   return res;
   // }
 
@@ -67,39 +84,53 @@ export namespace WebApi {
     crypto: string,
     generated: object
   ): Promise<
-    FetchResult<{
-      data: {
-        username: string;
-        level: AuthLevel;
-        crypto: string;
-        result: any;
-      };
-    }>
+    FetchResult<ReturnType<typeof ApiSerializerCreateUser.deserializeResponse>>
   > {
-    const res = await handleMyFetch('/auth-portal/api/user', 'POST', {
-      username,
-      level,
-      crypto,
-      generated: JSON.stringify(generated),
-    });
-    if (res.ok && res.result.ok) {
-      // TODO: validate
+    const res = await handleMyFetch(
+      '/auth-portal/api/user',
+      'POST',
+      ApiSerializerCreateUser.serializeRequest({
+        username,
+        level,
+        crypto,
+        generated,
+      })
+    );
+    if (res.ok === false) {
+      // network error
       return res;
     }
-    return res;
+    const validated = ApiSerializerCreateUser.deserializeResponse(
+      res.result as any
+    );
+    if (!validated) {
+      // validation error
+      return { ok: false, response: res.response };
+    }
+    return { ok: true, result: validated, response: res.response };
   }
 
   export async function fetchDeleteUser(
     username: string
-  ): Promise<FetchResult<{}>> {
+  ): Promise<
+    FetchResult<ReturnType<typeof ApiSerializerDeleteUser.deserializeResponse>>
+  > {
     const res = await handleMyFetch(
       '/auth-portal/api/user/' + username,
       'DELETE',
       {}
     );
-    if (res.ok && res.result.ok) {
+    if (res.ok === false) {
+      // network error
       return res;
     }
-    return res;
+    const validated = ApiSerializerDeleteUser.deserializeResponse(
+      res.result as any
+    );
+    if (!validated) {
+      // validation error
+      return { ok: false, response: res.response };
+    }
+    return { ok: true, result: validated, response: res.response };
   }
 }

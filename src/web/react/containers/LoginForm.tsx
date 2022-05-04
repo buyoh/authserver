@@ -20,31 +20,29 @@ type State = {
   resultLog: string;
 };
 
-// TODO: REFACTORING
 async function tryToLogin(
   username,
   pass,
   crypto
 ): Promise<{ ok: boolean; detail: string }> {
   const res1 = await WebApi.fetchLogin(username, pass, crypto);
-  if (400 <= res1.status && res1.status < 500) {
-    const json = await res1.json();
+  if (res1.ok === false) {
     return {
       ok: false,
-      detail: json.detail ? json.detail : 'bad request :(',
-    };
-  } else if (200 <= res1.status && res1.status < 300) {
-    return {
-      ok: true,
-      detail: 'login ok',
-    };
-  } else {
-    console.error(res1);
-    return {
-      ok: false,
-      detail: 'internal error',
+      detail: 'network error',
     };
   }
+  const res2 = res1.result;
+  if (res2.ok === false) {
+    return {
+      ok: false,
+      detail: res2.detail ?? 'bad request :(',
+    };
+  }
+  return {
+    ok: true,
+    detail: 'login ok',
+  };
 }
 
 function transitLoggedIn() {

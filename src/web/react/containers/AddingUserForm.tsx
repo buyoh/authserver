@@ -55,14 +55,19 @@ async function addUser(
     console.warn('addUser failed (bad request): ', res.result);
     return { ok: false, details: res.result.detail };
   }
-  if (
-    res.result.data.username !== username ||
-    res.result.data.level !== authLevel
-  ) {
+  if (res.result.username !== username || res.result.level !== authLevel) {
     console.warn('addUser failed: wrong username', res.result);
     return { ok: false, details: 'internal error' };
   }
-  return { ok: true, data: res.result.data };
+  return {
+    ok: true,
+    data: {
+      username: res.result.username,
+      level: res.result.level,
+      crypto: res.result.crypto,
+      result: res.result.generated, // TODO:
+    },
+  };
 }
 
 const passCryptoOptions = kPassCryptoList.map((t) => ({ label: t, value: t }));
