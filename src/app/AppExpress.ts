@@ -6,14 +6,12 @@ import {
   kResultInvalid,
   ResultErrors,
 } from '../base/error';
-import { validateAuthLevel } from '../user_profile/UserProfile';
 import { isLoggedIn, validateAppUserSession } from './AppUserSession';
 import {
   WebContentsServerDevImpl,
   WebContentsServerImpl,
 } from './WebContentsServer';
 import { AppConfig } from './AppConfig';
-import { convertToPassCryptoMode } from '../crypto/PassCryptoProxy';
 import {
   ApiSerializerCreateUser,
   ApiSerializerDeleteUser,
@@ -141,28 +139,15 @@ export class AppExpress {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
-      const username = validated.username;
-      const generated = validated.generated;
-      const cryptoRaw = validated.crypto;
-      // TODO: FIXME: easy implementation!
-      const pass = (generated as any).pass ?? '';
-
-      // TODO: move to ApiSerializer
-      const crypto = convertToPassCryptoMode(cryptoRaw);
-      if (crypto === null) {
-        // TODO: handleGenericError also use ApiSerializerLogin.serializeResponse
-        handleGenericError(req, res, kResultInvalid);
-        return;
-      }
       const prevSession = validateAppUserSession(req.session);
 
       this.appHandler
-        .login(prevSession, username, pass, crypto)
-        .then((res1) => {
-          if (res1.ok === false) {
+        .login(prevSession, validated)
+        .then((appRes1) => {
+          if (appRes1.response.ok === false) {
             // TODO: bugfix
             // result をセットしないケースがある
-            // handleGenericError(req, res, res1);
+            // handleGenericError(req, res, appRes1);
             handleGenericError(req, res, kResultInvalid);
             return;
           }
@@ -171,13 +156,9 @@ export class AppExpress {
             return;
           }
           req.session.regenerate((_err) => {
-            Object.assign(req.session, res1.session);
+            Object.assign(req.session, appRes1.session);
             res.status(200);
-            res.json(
-              ApiSerializerLogin.serializeResponse({
-                ok: true,
-              })
-            );
+            res.json(ApiSerializerLogin.serializeResponse(appRes1.response));
           });
         })
         .catch((e) => handleInternalError(req, res, e));
@@ -189,7 +170,7 @@ export class AppExpress {
       const prevSession = validateAppUserSession(req.session);
       this.appHandler
         .loggedout(prevSession)
-        .then((res1) => {
+        .then((appRes1) => {
           // There is no reason for canceling destroying sessions
           // if (res1.ok === false);
           if (req.session === undefined) {
@@ -237,23 +218,16 @@ export class AppExpress {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
-      const username = validated.username;
 
       this.appHandler
-        .getUser(session, username)
-        .then((res1) => {
-          if (res1.ok === false) {
-            handleGenericError(req, res, res1);
+        .getUser(session, validated)
+        .then((appRes1) => {
+          if (appRes1.ok === false) {
+            handleGenericError(req, res, appRes1);
             return;
           }
           res.status(200);
-          res.json(
-            ApiSerializerGetUser.serializeResponse({
-              ok: true,
-              username: res1.username,
-              level: res1.level,
-            })
-          );
+          res.json(ApiSerializerGetUser.serializeResponse(appRes1));
         })
         .catch((e) => handleInternalError(req, res, e));
     });
@@ -269,22 +243,13 @@ export class AppExpress {
       }
       this.appHandler
         .getUsers(session)
-        .then((res1) => {
-          if (res1.ok === false) {
-            handleGenericError(req, res, res1);
+        .then((appRes1) => {
+          if (appRes1.ok === false) {
+            handleGenericError(req, res, appRes1);
             return;
           }
           res.status(200);
-          res.json(
-            ApiSerializerGetUsers.serializeResponse({
-              ok: true,
-              data: res1.data.map((e) => ({
-                level: e.level,
-                username: e.username,
-                me: e.me,
-              })),
-            })
-          );
+          res.json(ApiSerializerGetUsers.serializeResponse(appRes1));
         })
         .catch((e) => handleInternalError(req, res, e));
     });
@@ -304,36 +269,15 @@ export class AppExpress {
         return;
       }
 
-      const username = validated.username;
-      const level = validated.level;
-      const crypto = convertToPassCryptoMode(validated.crypto);
-      const generated = validated.generated;
-      // TODO: FIXME: easy implementation!
-      const pass = (generated as any).pass ?? '';
-      // console.log('generated:', generated);
-
-      if (crypto === null) {
-        handleGenericError(req, res, kResultInvalid);
-        return;
-      }
       this.appHandler
-        .createUser(session, username, crypto, pass, level)
-        .then((res1) => {
-          if (res1.ok === false) {
-            handleGenericError(req, res, res1);
+        .createUser(session, validated)
+        .then((appRes1) => {
+          if (appRes1.ok === false) {
+            handleGenericError(req, res, appRes1);
             return;
           }
           res.status(200);
-          res.json(
-            ApiSerializerCreateUser.serializeResponse({
-              ok: true,
-              username,
-              level,
-              crypto: res1.crypto,
-              // TODO: res1.result? It seems to need refactorings
-              generated: res1.result as object,
-            })
-          );
+          res.json(ApiSerializerCreateUser.serializeResponse(appRes1));
         })
         .catch((e) => handleInternalError(req, res, e));
     });
@@ -354,16 +298,16 @@ export class AppExpress {
         handleGenericError(req, res, kResultInvalid);
         return;
       }
-      const username = validated.username;
+
       this.appHandler
-        .deleteUser(session, username)
-        .then((res1) => {
-          if (res1.ok === false) {
-            handleGenericError(req, res, res1);
+        .deleteUser(session, validated)
+        .then((appRes1) => {
+          if (appRes1.ok === false) {
+            handleGenericError(req, res, appRes1);
             return;
           }
           res.status(200);
-          res.json(ApiSerializerDeleteUser.serializeResponse({ ok: true }));
+          res.json(ApiSerializerDeleteUser.serializeResponse(appRes1));
         })
         .catch((e) => handleInternalError(req, res, e));
     });

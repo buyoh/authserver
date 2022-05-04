@@ -12,7 +12,21 @@ import {
   User,
 } from '../user_profile/UserProfile';
 import { AppUserSession, kInvalidAppUserSession } from './AppUserSession';
-import { PassCryptoMode } from '../crypto/PassCryptoProxy';
+import {
+  convertToPassCryptoMode,
+  PassCryptoMode,
+} from '../crypto/PassCryptoProxy';
+import {
+  ApiLoginRequest,
+  ApiLoginResponse,
+  ApiGetUserRequest,
+  ApiGetUserResponse,
+  ApiGetUsersResponse,
+  ApiCreateUserRequest,
+  ApiCreateUserResponse,
+  ApiDeleteUserRequest,
+  ApiDeleteUserResponse,
+} from '../api/Api';
 
 export class AppHandler {
   private resource: ResourceProvider;
@@ -23,38 +37,45 @@ export class AppHandler {
 
   async login(
     session: AppUserSession,
-    username: string,
-    pass: string,
-    crypto: PassCryptoMode
-  ): Promise<(ResultOk | ResultErrors) & { session: AppUserSession }> {
+    { username, crypto, generated }: ApiLoginRequest
+  ): Promise<{ response: ApiLoginResponse; session: AppUserSession }> {
     // TODO: pass ではなく、UserInputForVerify であるべき。
     // パスワード以外の何かを要求することは少ないと推測。
     // 現状のインターフェースでも影響は少なそう。
+    // TODO: FIXME: easy implementation!
+    const pass = (generated as any).pass ?? '';
     const userInputForVerify = {
       username,
       pass,
     };
+    // TODO: move to ApiSerializer
+    const crypto2 = convertToPassCryptoMode(crypto);
+    if (crypto2 === null) {
+      return { response: kResultInvalid, session: { ...session } };
+    }
 
+    // Use standard user manager
     const res1 = await this.resource
       .getUserManager()
-      .testUser(username, crypto, userInputForVerify);
+      .testUser(username, crypto2, userInputForVerify);
     if (res1.ok === true) {
       return {
-        ok: true,
+        response: { ok: true },
         session: { username: res1.username, level: res1.level },
       };
     }
+    // Use privileged user manager
     const res2 = await this.resource
       .getPrivilegedUserManager()
-      .testUser(username, crypto, userInputForVerify);
+      .testUser(username, crypto2, userInputForVerify);
     if (res2.ok === true) {
       return {
-        ok: true,
+        response: { ok: true },
         session: { username: res2.username, level: res2.level },
       };
     }
     // If it fails, return the result of the standard usermanager.
-    return { ...res1, session: { ...session } };
+    return { response: { ...res1 }, session: { ...session } };
   }
 
   async loggedout(_session: AppUserSession): Promise<ResultOk | ResultErrors> {
@@ -63,8 +84,8 @@ export class AppHandler {
 
   async getUser(
     session: AppUserSession,
-    username: string
-  ): Promise<(ResultOk & User) | ResultErrors> {
+    { username }: ApiGetUserRequest
+  ): Promise<ApiGetUserResponse> {
     const res1 = await this.resource.getUserManager().getUser(username);
     if (!res1.ok) {
       const res2 = await this.resource
@@ -75,12 +96,7 @@ export class AppHandler {
     return res1;
   }
 
-  async getUsers(session: AppUserSession): Promise<
-    | (ResultOk & {
-        data: Array<{ username: string; level: AuthLevel; me: boolean }>;
-      })
-    | ResultErrors
-  > {
+  async getUsers(session: AppUserSession): Promise<ApiGetUsersResponse> {
     const res1 = await this.resource.getUserManager().allUsers();
     if (res1.ok === false) {
       return res1;
@@ -101,14 +117,19 @@ export class AppHandler {
 
   async createUser(
     session: AppUserSession,
-    username: string,
-    crypto: PassCryptoMode,
-    pass: string,
-    level: AuthLevel
-  ): Promise<(ResultOk & { result: object; crypto: string }) | ResultErrors> {
+    { username, level, crypto, generated }: ApiCreateUserRequest
+  ): Promise<ApiCreateUserResponse> {
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
     }
+    // TODO: move to ApiSerializer
+    const crypto2 = convertToPassCryptoMode(crypto);
+    if (crypto2 === null) {
+      return kResultInvalid;
+    }
+    // TODO: FIXME: easy implementation!
+    const pass = (generated as any).pass ?? '';
+
     // Avoid keeping the same username in both usermanagers.
     const res0 = await this.resource
       .getPrivilegedUserManager()
@@ -119,17 +140,23 @@ export class AppHandler {
     // Create a user into the standard usermanager.
     const res1 = await this.resource
       .getUserManager()
-      .addUser({ username, level }, crypto, { username, pass });
+      .addUser({ username, level }, crypto2, { username, pass });
     if (res1.ok === false) {
       return res1;
     }
-    return { ok: true, result: res1.result, crypto };
+    return {
+      ok: true,
+      username,
+      level,
+      crypto,
+      generated: res1.result as object,
+    };
   }
 
   async deleteUser(
     session: AppUserSession,
-    username: string
-  ): Promise<ResultOk | ResultErrors> {
+    { username }: ApiDeleteUserRequest
+  ): Promise<ApiDeleteUserResponse> {
     const m = this.resource.getUserManager();
     // get user for level
     const res1 = await m.getUser(username);
