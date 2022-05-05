@@ -17,7 +17,7 @@ class OutputViewsConcreteForm extends React.Component<Props, State> {
 
   render(): JSX.Element {
     return (
-      <>
+      <div className="table">
         {this.props.concepts.map((c) => (
           <OutputViewConcrete
             concept={c}
@@ -25,7 +25,7 @@ class OutputViewsConcreteForm extends React.Component<Props, State> {
             value={this.props.values[c.key]}
           />
         ))}
-      </>
+      </div>
     );
   }
 }

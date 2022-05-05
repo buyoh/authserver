@@ -101,3 +101,24 @@ output {
   font-weight: bolder;
   color:#0f8;
 }
+
+.table {
+  display: table;
+  border-top: 2px solid #eee5;
+  border-bottom: 2px solid #eee5;
+}
+
+.table .table-row {
+  display: table-row;
+  border-bottom: 1px dashed #eee5;
+}
+
+.table .table-row :last-child {
+  border-bottom: none;
+}
+
+.table .table-row .table-cell {
+  display: table-cell;
+
+  padding: 0.5em
+}

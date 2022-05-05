@@ -1,5 +1,6 @@
 import React from 'react';
 import { OutputViewConceptWithKey } from '../../../ui/FormConcept';
+import QRCode from './QRCode';
 
 type Props = {
   concept: OutputViewConceptWithKey;
@@ -14,19 +15,37 @@ class OutputViewConcrete extends React.Component<Props, State> {
   }
 
   render(): JSX.Element {
-    // const type = this.props.concept.type; // TODO:
-    return this.renderText();
+    return (
+      <div className="table-row">
+        <div className="table-cell">{this.props.concept.key}</div>
+        <div className="table-cell">{this.renderValue()}</div>
+      </div>
+    );
+  }
+
+  renderValue(): JSX.Element {
+    if (this.props.concept.type === 'qr') {
+      return this.renderQr();
+    } else {
+      // text
+      return this.renderText();
+    }
+  }
+  renderQr(): JSX.Element {
+    return (
+      <span style={{ display: 'inline-block', border: '10px solid #fff' }}>
+        <QRCode
+          size={128}
+          cssWidth={256}
+          cssHeight={256}
+          value={this.props.value}
+        />
+      </span>
+    );
   }
 
   renderText(): JSX.Element {
-    return (
-      <div>
-        <label>
-          {this.props.concept.key}
-          <output>{this.props.value}</output>
-        </label>
-      </div>
-    );
+    return <code>{this.props.value}</code>;
   }
 }
 
