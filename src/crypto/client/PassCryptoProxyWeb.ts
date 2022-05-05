@@ -1,4 +1,4 @@
-import { InputViewConcept, OutputViewConcept } from '../ui/FormConcept';
+import { InputViewConcept, OutputViewConcept } from '../../ui/FormConcept';
 import { NoPassCryptoClientImpl } from './NoPassCryptoClient';
 import { OtpAuthCryptoClientImpl } from './OtpAuthCryptoClient';
 import { PassCryptoClientImpl } from './PassCryptoClientInterface';

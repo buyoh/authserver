@@ -2,7 +2,7 @@
 // Define what the frontend do
 //
 
-import { InputViewConcept, OutputViewConcept } from '../ui/FormConcept';
+import { InputViewConcept, OutputViewConcept } from '../../ui/FormConcept';
 
 export interface PassCryptoClientImpl<
   UserInputForGenerate,

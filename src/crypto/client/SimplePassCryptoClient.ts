@@ -1,4 +1,4 @@
-import { InputViewConcept, OutputViewConcept } from '../ui/FormConcept';
+import { InputViewConcept, OutputViewConcept } from '../../ui/FormConcept';
 import { PassCryptoClientImpl } from './PassCryptoClientInterface';
 
 type SimplePassCryptoUserInputForGenerate = {

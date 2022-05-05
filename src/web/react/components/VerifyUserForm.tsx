@@ -1,6 +1,6 @@
 import React from 'react';
 import { PassCryptoMode } from '../../../crypto/PassCrypto';
-import { PassCryptoClient } from '../../../crypto/PassCryptoProxyWeb';
+import { PassCryptoClient } from '../../../crypto/client/PassCryptoProxyWeb';
 import { sortedViewConceptsInternal } from '../../../ui/FormConcept';
 import InputViewsConcreteForm from './InputViewsConcreteForm';
 import TextInput from './TextInput';

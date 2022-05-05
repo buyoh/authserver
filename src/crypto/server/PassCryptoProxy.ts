@@ -1,6 +1,6 @@
 import { NoPassCrypto } from './NoPassCrypto';
 import { OtpAuthCrypto } from './OtpAuthCrypto';
-import { PassCryptoMode } from './PassCrypto';
+import { PassCryptoMode } from '../PassCrypto';
 import { PassCrypto } from './PassCryptoServerInterface';
 import { SimplePassCrypto } from './SimplePassCrypto';
 
