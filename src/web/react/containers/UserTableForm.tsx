@@ -1,6 +1,10 @@
 import React from 'react';
 import { UserListContextConsumer } from './UserListFetcher';
-import { isEditableAuthLevel, User } from '../../../user_profile/UserProfile';
+import {
+  authLevelToString,
+  isEditableAuthLevel,
+  User,
+} from '../../../user_profile/UserProfile';
 import Button from '../components/Button';
 import { WebApi } from '../../api/WebApi';
 // import Styles from './style.module.scss';
@@ -35,7 +39,7 @@ function UserTableRow(props: {
   return (
     <tr>
       <td>{props.user.username}</td>
-      <td>{props.user.level}</td>
+      <td>{authLevelToString(props.user.level)}</td>
       <td>
         {isMe ? (
           '[you]'

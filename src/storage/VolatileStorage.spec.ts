@@ -51,7 +51,7 @@ describe('VolatileStorage', () => {
     const storage = new VolatileStorage('dbname');
     await storage.initialize();
 
-    const keys = [];
+    const keys = [] as number[];
 
     for (let i = 0; i < 4; ++i) {
       const limit = 2;

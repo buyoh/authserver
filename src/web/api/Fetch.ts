@@ -9,7 +9,7 @@ export interface FetchResultOk<T> {
 }
 export interface FetchResultError {
   ok: false;
-  response: Response;
+  response: Response | null;
 }
 
 export type FetchResult<T> = FetchResultOk<T> | FetchResultError;
@@ -37,7 +37,7 @@ export async function handleMyFetch(
   method: HTTPMethod,
   json: object
 ): Promise<FetchResult<unknown>> {
-  let response = null as Response;
+  let response = null as Response | null;
   try {
     response = await myFetch(uri, method, json);
     const status = response.status;

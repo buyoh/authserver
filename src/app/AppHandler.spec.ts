@@ -16,7 +16,7 @@ import {
 } from '../user_profile/UserProfile';
 import { AppUserSession, kInvalidAppUserSession } from './AppUserSession';
 import { UserProfileManager } from '../user_profile/UserProfileManager';
-import { PassCryptoMode } from '../crypto/PassCryptoProxy';
+import { PassCryptoMode } from '../crypto/PassCrypto';
 
 //
 // testdata
@@ -70,6 +70,7 @@ class UserProfileManagerTestImpl implements UserProfileManager {
   ): Promise<(ResultOk & { result: object }) | ResultErrors> {
     if (this.err) return this.err;
     this.users = this.users.concat(user);
+    return { ok: true, result: {} };
   }
 
   async getUser(username: string): Promise<ResultErrors | (ResultOk & User)> {
@@ -163,10 +164,15 @@ describe('AppHandler', () => {
     const handler = new AppHandler(resourceProvider);
 
     const session = { ...kInvalidAppUserSession };
-    const res = await handler.login(session, 'admin', 'passphrase', 'pass');
+    const request = {
+      username: 'admin',
+      crypto: 'pass' as PassCryptoMode,
+      generated: { pass: 'passphrase' },
+    };
+    const res = await handler.login(session, request);
 
-    expect(res.ok).toBeTruthy();
-    if (!res.ok) return;
+    expect(res.response.ok).toBeTruthy();
+    if (!res.response.ok) return;
     expect(resourceProvider.userProfileManager.testUser).toHaveBeenCalledTimes(
       1
     );
@@ -177,7 +183,6 @@ describe('AppHandler', () => {
       resourceProvider.privilegedProfileManager.testUser
     ).toHaveBeenCalledWith('admin', 'pass', {
       pass: 'passphrase',
-      username: 'admin',
     });
   });
 });
