@@ -113,6 +113,7 @@ describe('VolatileStorage', () => {
 
     const res0 = await storage.insert('key', { test: 'data1', test2: 'data2' });
     expect(res0.ok).toBeFalsy();
-    expect(res0.ok).toBe('error');
+    if (res0.ok === true) return;
+    expect(res0.result).toBe('error');
   });
 });

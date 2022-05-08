@@ -58,9 +58,7 @@ export function authLevelToString(level: AuthLevel): string {
 export function isEditableAuthLevel(me: AuthLevel, target: AuthLevel): boolean {
   return me === AuthLevelAdmin && target === AuthLevelAdmin
     ? true
-    : target === AuthLevelAdmin
-    ? false
-    : me <= target;
+    : me < target;
 }
 
 //

@@ -1,4 +1,8 @@
-import { kResultNotFound, kResultInvalid } from '../base/error';
+import {
+  kResultNotFound,
+  kResultInvalid,
+  kResultInternalError,
+} from '../base/error';
 import {
   KeyValueStorage,
   KeyValueStorageResult,
@@ -9,16 +13,19 @@ const globalStore = {} as { [key: string]: { [key: string]: string } };
 
 export class VolatileStorage implements KeyValueStorage {
   private storage: { [key: string]: string };
+  private initialized: boolean;
 
   constructor(dbName: string) {
     this.storage = globalStore[dbName] || {};
+    this.initialized = false;
   }
 
   async initialize(): Promise<void> {
-    //
+    this.initialized = true;
   }
 
   async get(key: string): Promise<KeyValueStorageResult> {
+    if (!this.initialized) return kResultInternalError;
     if (!this.storage[key]) {
       return kResultNotFound;
     }
@@ -32,6 +39,7 @@ export class VolatileStorage implements KeyValueStorage {
     length?: number,
     offset?: number
   ): Promise<KeyValueStorageResultMany> {
+    if (!this.initialized) return kResultInternalError;
     if (offset === undefined) offset = 0;
     if (length === undefined) length = Object.keys(this.storage).length;
     const li = Object.entries(this.storage)
@@ -44,6 +52,7 @@ export class VolatileStorage implements KeyValueStorage {
   }
 
   async insert(key: string, data: any): Promise<KeyValueStorageResult> {
+    if (!this.initialized) return kResultInternalError;
     if (this.storage[key]) {
       return kResultInvalid;
     }
@@ -53,6 +62,7 @@ export class VolatileStorage implements KeyValueStorage {
   }
 
   async update(key: string, data: any): Promise<KeyValueStorageResult> {
+    if (!this.initialized) return kResultInternalError;
     if (!this.storage[key]) {
       return kResultInvalid;
     }
@@ -63,6 +73,7 @@ export class VolatileStorage implements KeyValueStorage {
   }
 
   async erase(key: string): Promise<KeyValueStorageResult> {
+    if (!this.initialized) return kResultInternalError;
     delete this.storage[key];
     return { ok: true };
   }

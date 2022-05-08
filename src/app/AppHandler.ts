@@ -9,7 +9,7 @@ import {
   AuthLevelAdmin,
   isEditableAuthLevel,
 } from '../user_profile/UserProfile';
-import { AppUserSession } from './AppUserSession';
+import { AppUserSession, isLoggedIn } from './AppUserSession';
 import {
   ApiLoginRequest,
   ApiLoginResponse,
@@ -65,6 +65,9 @@ export class AppHandler {
     session: AppUserSession,
     { username }: ApiGetUserRequest
   ): Promise<ApiGetUserResponse> {
+    if (!isLoggedIn(session)) {
+      return kResultForbidden;
+    }
     const res1 = await this.resource.getUserManager().getUser(username);
     if (!res1.ok) {
       const res2 = await this.resource
@@ -76,6 +79,9 @@ export class AppHandler {
   }
 
   async getUsers(session: AppUserSession): Promise<ApiGetUsersResponse> {
+    if (!isLoggedIn(session)) {
+      return kResultForbidden;
+    }
     const res1 = await this.resource.getUserManager().allUsers();
     if (res1.ok === false) {
       return res1;
@@ -98,6 +104,12 @@ export class AppHandler {
     session: AppUserSession,
     { username, level, crypto, generated }: ApiCreateUserRequest
   ): Promise<ApiCreateUserResponse> {
+    if (!isLoggedIn(session)) {
+      return kResultForbidden;
+    }
+    if (level === AuthLevelAdmin) {
+      return kResultForbidden;
+    }
     if (!isEditableAuthLevel(session.level, level)) {
       return kResultForbidden;
     }
@@ -129,6 +141,9 @@ export class AppHandler {
     session: AppUserSession,
     { username }: ApiDeleteUserRequest
   ): Promise<ApiDeleteUserResponse> {
+    if (!isLoggedIn(session)) {
+      return kResultForbidden;
+    }
     const m = this.resource.getUserManager();
     // get user for level
     const res1 = await m.getUser(username);

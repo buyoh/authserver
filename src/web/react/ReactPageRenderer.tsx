@@ -9,5 +9,5 @@ const container = document.getElementById('react');
 const root = createRoot(container!);
 
 export function renderPage(element: JSX.Element) {
-  root.render(<>{element}</>);
+  root.render(<React.StrictMode>{element}</React.StrictMode>);
 }
