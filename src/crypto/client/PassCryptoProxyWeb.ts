@@ -16,7 +16,6 @@ export class PassCryptoClient
   crypto: Impls;
 
   // TODO: Refactorings
-  // サーバ側のように、実装ごとに用意した方が良いかもしれない
   constructor(cryptoName: string) {
     if (cryptoName === NoPassCryptoClientImpl.cryptoName) {
       this.crypto = NoPassCryptoClientImpl;

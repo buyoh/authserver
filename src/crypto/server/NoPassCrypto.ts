@@ -1,19 +1,29 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { PassCrypto, PassCryptoImpl } from './PassCryptoServerInterface';
+import {
+  PassCrypto,
+  PassCryptoImpl,
+  PassCryptoValidator,
+} from './PassCryptoServerInterface';
+import * as t from 'io-ts';
+
+const NoPassCryptoValidator: PassCryptoValidator = {
+  UserInputForGenerate: t.unknown,
+  SecretData: t.unknown,
+  UserResultOfGenerate: t.unknown,
+  UserInputForVerify: t.unknown,
+};
 
 type NoPassCryptoUserInputForGenerate = {};
 type NoPassCryptoSecretData = {};
 type NoPassCryptoResultOfGenerate = {};
-type NoPassCryptoUserInputForVerify = {
-  // pass: string;
-};
+type NoPassCryptoUserInputForVerify = {};
 
-const NoPassCryptoImpl: PassCryptoImpl<
+export const NoPassCryptoImpl: PassCryptoImpl<
   NoPassCryptoUserInputForGenerate,
   NoPassCryptoSecretData,
   NoPassCryptoResultOfGenerate,
   NoPassCryptoUserInputForVerify
 > = {
+  validator: NoPassCryptoValidator,
   generate(
     _username: string,
     _input: NoPassCryptoUserInputForGenerate
@@ -34,19 +44,5 @@ const NoPassCryptoImpl: PassCryptoImpl<
     _input: NoPassCryptoUserInputForVerify
   ): boolean {
     return true;
-  },
-};
-
-// any にしてしまったら意味が無い…
-// ただクライアントとやりとりする間に型は失うので、どこまで型を引っ張るかは検討
-export const NoPassCrypto: PassCrypto = {
-  generate: function (
-    username: string,
-    input: any
-  ): Error | { secret: any; result: any } {
-    return NoPassCryptoImpl.generate(username, input);
-  },
-  verify: function (username: string, secret: any, input: any): boolean {
-    return NoPassCryptoImpl.verify(username, secret, input);
   },
 };

@@ -1,30 +1,52 @@
-import { PassCrypto, PassCryptoImpl } from './PassCryptoServerInterface';
+import {
+  PassCrypto,
+  PassCryptoImpl,
+  PassCryptoValidator,
+} from './PassCryptoServerInterface';
 import { randomBytes, scryptSync } from 'crypto';
+import * as t from 'io-ts';
 
-type SimplePassCryptoUserInputForGenerate = {
-  pass?: string;
-};
-type SimplePassCryptoSecretData = {
-  salt: string;
-  hash: string;
-};
-type SimplePassCryptoResultOfGenerate = {
-  pass?: string;
-};
-type SimplePassCryptoUserInputForVerify = {
-  pass: string;
+const SimplePassCryptoValidator: PassCryptoValidator = {
+  UserInputForGenerate: t.type({
+    pass: t.union([t.string, t.undefined]),
+  }),
+  SecretData: t.type({
+    salt: t.string,
+    hash: t.string,
+  }),
+  UserResultOfGenerate: t.type({
+    pass: t.union([t.string, t.undefined]),
+  }),
+  UserInputForVerify: t.type({
+    pass: t.string,
+  }),
 };
 
+type SimplePassCryptoUserInputForGenerate = t.TypeOf<
+  typeof SimplePassCryptoValidator.UserInputForGenerate
+>;
+type SimplePassCryptoSecretData = t.TypeOf<
+  typeof SimplePassCryptoValidator.SecretData
+>;
+type SimplePassCryptoResultOfGenerate = t.TypeOf<
+  typeof SimplePassCryptoValidator.UserResultOfGenerate
+>;
+type SimplePassCryptoUserInputForVerify = t.TypeOf<
+  typeof SimplePassCryptoValidator.UserInputForVerify
+>;
+
+// TODO:
 export function isValidPassword(password: string): boolean {
   return 4 <= password.length && password.length <= 200;
 }
 
-const SimplePassCryptoImpl: PassCryptoImpl<
+export const SimplePassCryptoImpl: PassCryptoImpl<
   SimplePassCryptoUserInputForGenerate,
   SimplePassCryptoSecretData,
   SimplePassCryptoResultOfGenerate,
   SimplePassCryptoUserInputForVerify
 > = {
+  validator: SimplePassCryptoValidator,
   generate(
     username: string,
     input: SimplePassCryptoUserInputForGenerate
@@ -58,19 +80,5 @@ const SimplePassCryptoImpl: PassCryptoImpl<
       'hex'
     );
     return secret.hash === hash;
-  },
-};
-
-// any にしてしまったら意味が無い…
-// ただクライアントとやりとりする間に型は失うので、どこまで型を引っ張るかは検討
-export const SimplePassCrypto: PassCrypto = {
-  generate: function (
-    username: string,
-    input: any
-  ): Error | { secret: any; result: any } {
-    return SimplePassCryptoImpl.generate(username, input);
-  },
-  verify: function (username: string, secret: any, input: any): boolean {
-    return SimplePassCryptoImpl.verify(username, secret, input);
   },
 };

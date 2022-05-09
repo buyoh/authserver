@@ -16,7 +16,7 @@ import {
   kResultInternalError,
 } from '../base/error';
 import { UserProfileManager } from './UserProfileManager';
-import { getPassCryptoInstance } from '../crypto/server/PassCryptoProxy';
+import { PassCryptoProxy } from '../crypto/server/PassCryptoProxy';
 import { PassCryptoMode } from '../crypto/PassCrypto';
 
 //
@@ -89,7 +89,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
 
-    const crypto = getPassCryptoInstance(passCryptoMode);
+    const crypto = new PassCryptoProxy(passCryptoMode);
     const res = crypto.generate(username, userInputForGenerate);
     if (res instanceof Error) return { ...kResultInvalid, detail: res.message };
     const { secret, result } = res;
@@ -198,7 +198,7 @@ export class UserProfileManagerImpl implements UserProfileManager {
       return kResultInvalid;
     }
 
-    const crypto = getPassCryptoInstance(passCryptoMode);
+    const crypto = new PassCryptoProxy(passCryptoMode);
     const res3 = crypto.verify(resUsername, resSecret, userInputForVerify);
     if (!res3) {
       if (incTryCount) {

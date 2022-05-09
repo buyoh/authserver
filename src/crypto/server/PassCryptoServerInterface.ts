@@ -1,3 +1,5 @@
+import * as t from 'io-ts';
+
 export interface PassCryptoImpl<
   UserInputForGenerate,
   SecretData,
@@ -17,15 +19,21 @@ export interface PassCryptoImpl<
     secret: SecretData,
     input: UserInputForVerify
   ): boolean;
+  validator: PassCryptoValidator;
 }
 
 // TODO: async
-// TODO: userInputForGenerate に username などの情報を取り込みたいことは想定される設計だが、
-// どのタイミングで取り込むべき？引数や interface として User の枠を用意すべき？
 export interface PassCrypto {
   generate(
     username: string,
     input: object
   ): { secret: object; result: object } | Error;
   verify(username: string, secret: object, input: object): boolean;
+}
+
+export interface PassCryptoValidator {
+  UserInputForGenerate: t.Any;
+  SecretData: t.Any;
+  UserResultOfGenerate: t.Any;
+  UserInputForVerify: t.Any;
 }
