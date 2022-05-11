@@ -1,7 +1,8 @@
+import { checkTypeVerbose } from '../../base/IoTs';
 import { InputViewConcept, OutputViewConcept } from '../../ui/FormConcept';
 import { NoPassCryptoClientImpl } from './NoPassCryptoClient';
 import { OtpAuthCryptoClientImpl } from './OtpAuthCryptoClient';
-import { PassCryptoClientImpl } from './PassCryptoClientInterface';
+import { PassCryptoClient } from './PassCryptoClientInterface';
 import { SimplePassCryptoClientImpl } from './SimplePassCryptoClient';
 
 type Impls =
@@ -9,9 +10,7 @@ type Impls =
   | typeof OtpAuthCryptoClientImpl
   | typeof SimplePassCryptoClientImpl;
 
-export class PassCryptoClient
-  implements PassCryptoClientImpl<object, object, object>
-{
+export class PassCryptoClientProxy implements PassCryptoClient {
   // bad name...
   crypto: Impls;
 
@@ -43,20 +42,21 @@ export class PassCryptoClient
     username: string,
     userInput: { [key: string]: string }
   ): object {
-    // TODO: consider checking type
     return this.crypto.createUserInputForGenerate(username, userInput);
   }
   createResultOfGenerate(result: object): {
     [key: string]: string;
   } {
-    // TODO: consider checking type
+    if (checkTypeVerbose(this.crypto.validator.UserResultOfGenerate, result)) {
+      console.warn('createUserInputForGenerate: checkType failed');
+      // We do not need to abort... Only for debug
+    }
     return this.crypto.createResultOfGenerate(result as any);
   }
   createUserInputForVerify(
     username: string,
     userInput: { [key: string]: string }
   ): object {
-    // TODO: consider checking type
     return this.crypto.createUserInputForVerify(username, userInput);
   }
 }

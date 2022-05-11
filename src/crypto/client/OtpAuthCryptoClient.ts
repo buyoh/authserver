@@ -1,18 +1,34 @@
 import { InputViewConcept, OutputViewConcept } from '../../ui/FormConcept';
-import { PassCryptoClientImpl } from './PassCryptoClientInterface';
+import {
+  PassCryptoClientImpl,
+  PassCryptoClientValidator,
+} from './PassCryptoClientInterface';
+import * as t from 'io-ts';
 
-type OtpAuthCryptoUserInputForGenerate = {};
-type OtpAuthCryptoResultOfGenerate = {
-  otpauth_url: string;
+const OtpAuthCryptoValidator: PassCryptoClientValidator = {
+  UserInputForGenerate: t.type({}),
+  UserResultOfGenerate: t.type({
+    otpauth_url: t.string,
+  }),
+  UserInputForVerify: t.type({
+    pass: t.string,
+  }),
 };
-type OtpAuthCryptoUserInputForVerify = {
-  pass: string;
-};
+
+type OtpAuthCryptoUserInputForGenerate = t.TypeOf<
+  typeof OtpAuthCryptoValidator.UserInputForGenerate
+>;
+type OtpAuthCryptoResultOfGenerate = t.TypeOf<
+  typeof OtpAuthCryptoValidator.UserResultOfGenerate
+>;
+type OtpAuthCryptoUserInputForVerify = t.TypeOf<
+  typeof OtpAuthCryptoValidator.UserInputForVerify
+>;
 
 export const OtpAuthCryptoClientImpl: PassCryptoClientImpl<
   OtpAuthCryptoUserInputForGenerate,
   OtpAuthCryptoResultOfGenerate,
-  {}
+  OtpAuthCryptoUserInputForVerify
 > = {
   cryptoName: 'otpauth',
   InputViewConceptForGenerate: function (): {
@@ -28,6 +44,7 @@ export const OtpAuthCryptoClientImpl: PassCryptoClientImpl<
   InputViewConceptForVerify: function (): { [key: string]: InputViewConcept } {
     return { pass: { type: 'text', priority: 1, minLength: 4, maxLength: 32 } };
   },
+  validator: OtpAuthCryptoValidator,
   createUserInputForGenerate: function (
     username: string,
     userInput: { [key: string]: string }

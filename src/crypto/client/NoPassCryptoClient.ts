@@ -1,5 +1,15 @@
 import { InputViewConcept, OutputViewConcept } from '../../ui/FormConcept';
-import { PassCryptoClientImpl } from './PassCryptoClientInterface';
+import {
+  PassCryptoClientImpl,
+  PassCryptoClientValidator,
+} from './PassCryptoClientInterface';
+import * as t from 'io-ts';
+
+const NoPassCryptoValidator: PassCryptoClientValidator = {
+  UserInputForGenerate: t.unknown,
+  UserResultOfGenerate: t.unknown,
+  UserInputForVerify: t.unknown,
+};
 
 type NoPassCryptoUserInputForGenerate = {};
 type NoPassCryptoResultOfGenerate = {};
@@ -24,6 +34,7 @@ export const NoPassCryptoClientImpl: PassCryptoClientImpl<
   InputViewConceptForVerify: function (): { [key: string]: InputViewConcept } {
     return {};
   },
+  validator: NoPassCryptoValidator,
   createUserInputForGenerate: function (
     username: string,
     userInput: { [key: string]: string }

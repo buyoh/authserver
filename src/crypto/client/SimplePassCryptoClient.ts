@@ -1,15 +1,31 @@
 import { InputViewConcept, OutputViewConcept } from '../../ui/FormConcept';
-import { PassCryptoClientImpl } from './PassCryptoClientInterface';
+import {
+  PassCryptoClientImpl,
+  PassCryptoClientValidator,
+} from './PassCryptoClientInterface';
+import * as t from 'io-ts';
 
-type SimplePassCryptoUserInputForGenerate = {
-  pass?: string;
+const SimplePassCryptoValidator: PassCryptoClientValidator = {
+  UserInputForGenerate: t.type({
+    pass: t.union([t.string, t.undefined]),
+  }),
+  UserResultOfGenerate: t.type({
+    pass: t.union([t.string, t.undefined]),
+  }),
+  UserInputForVerify: t.type({
+    pass: t.string,
+  }),
 };
-type SimplePassCryptoResultOfGenerate = {
-  pass?: string;
-};
-type SimplePassCryptoUserInputForVerify = {
-  pass: string;
-};
+
+type SimplePassCryptoUserInputForGenerate = t.TypeOf<
+  typeof SimplePassCryptoValidator.UserInputForGenerate
+>;
+type SimplePassCryptoResultOfGenerate = t.TypeOf<
+  typeof SimplePassCryptoValidator.UserResultOfGenerate
+>;
+type SimplePassCryptoUserInputForVerify = t.TypeOf<
+  typeof SimplePassCryptoValidator.UserInputForVerify
+>;
 
 export const SimplePassCryptoClientImpl: PassCryptoClientImpl<
   SimplePassCryptoUserInputForGenerate,
@@ -39,6 +55,8 @@ export const SimplePassCryptoClientImpl: PassCryptoClientImpl<
       pass: { type: 'password', priority: 1, minLength: 4, maxLength: 32 },
     };
   },
+
+  validator: SimplePassCryptoValidator,
 
   createUserInputForGenerate: function (
     username: string,
