@@ -58,7 +58,7 @@ function handleGenericError(
   res: Express.Response<any>,
   error: ResultErrors
 ) {
-  const data = { ok: false, detail: error.detail };
+  const data = { ok: false, result: error.result, detail: error.detail };
   if (error.result === 'forbidden') {
     res.status(403);
     res.json(data);
@@ -145,10 +145,7 @@ export class AppExpress {
         .login(prevSession, validated)
         .then((appRes1) => {
           if (appRes1.response.ok === false) {
-            // TODO: bugfix
-            // result をセットしないケースがある
-            // handleGenericError(req, res, appRes1);
-            handleGenericError(req, res, kResultInvalid);
+            handleGenericError(req, res, appRes1.response);
             return;
           }
           if (req.session === undefined) {
