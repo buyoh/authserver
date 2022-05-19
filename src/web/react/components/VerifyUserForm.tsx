@@ -1,6 +1,6 @@
 import React from 'react';
 import { PassCryptoMode } from '../../../crypto/PassCrypto';
-import { PassCryptoClient } from '../../../crypto/client/PassCryptoProxyWeb';
+import { PassCryptoClientProxy } from '../../../crypto/client/PassCryptoProxyWeb';
 import { sortedViewConceptsInternal } from '../../../ui/FormConcept';
 import InputViewsConcreteForm from './InputViewsConcreteForm';
 import TextInput from './TextInput';
@@ -22,14 +22,14 @@ class VerifyUserForm extends React.Component<Props, State> {
   }
 
   private handleSubmit(value: { [key: string]: string }) {
-    let generated = new PassCryptoClient(
+    let generated = new PassCryptoClientProxy(
       this.props.mode
     ).createUserInputForVerify(this.props.username, value);
     this.props.onSubmit(generated);
   }
 
   render(): JSX.Element {
-    const client = new PassCryptoClient(this.props.mode);
+    const client = new PassCryptoClientProxy(this.props.mode);
     const concepts = sortedViewConceptsInternal(
       client.InputViewConceptForVerify()
     );

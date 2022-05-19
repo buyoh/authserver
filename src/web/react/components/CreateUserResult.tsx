@@ -1,6 +1,6 @@
 import React from 'react';
 import { PassCryptoMode } from '../../../crypto/PassCrypto';
-import { PassCryptoClient } from '../../../crypto/client/PassCryptoProxyWeb';
+import { PassCryptoClientProxy } from '../../../crypto/client/PassCryptoProxyWeb';
 import { sortedViewConceptsInternal } from '../../../ui/FormConcept';
 import OutputViewsConcreteForm from './OutputViewsConcreteForm';
 
@@ -17,7 +17,7 @@ class CreateUserResult extends React.Component<Props, State> {
   }
 
   render(): JSX.Element {
-    const client = new PassCryptoClient(this.props.mode);
+    const client = new PassCryptoClientProxy(this.props.mode);
     const concepts = sortedViewConceptsInternal(
       client.OutputViewConceptForGenerate()
     );
