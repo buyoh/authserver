@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "Node",
+    "target": "ES2019",
+    "noImplicitAny": true,
+    "strict": true,
+    "jsx": "preserve",
+    "esModuleInterop": true,
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.css",
+    "**/*.scss",
+  ],
+}

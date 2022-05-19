@@ -4,8 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "build": "TS_NODE_PROJECT='tsconfig.webpack.json' webpack --config webpack.prod.config.js",
+    "start": "ts-node --project tsconfig.server.json src/index.ts",
+    "build-web": "TS_NODE_PROJECT='tsconfig.webpack.json' webpack --config webpack.prod.config.js",
+    "build": "yarn build-web",
     "lint": "prettier --check 'src/**/*.ts' && eslint src/**/*.ts",
     "lint-fix": "prettier --write 'src/**/*.ts'",
     "test": "jest --coverage",
