@@ -38,6 +38,7 @@ class VerifyUserForm extends React.Component<Props, State> {
         <InputViewsConcreteForm
           concepts={concepts}
           conceptsKey={this.props.mode}
+          // TODO: consider "submit" but "click"
           onSubmit={this.handleSubmit}
           submitLabel={'login'}
           largeStyle={true}

@@ -84,7 +84,7 @@ class LoginForm extends React.Component<Props, State> {
 
   render(): JSX.Element {
     return (
-      <form id="form-login">
+      <div id="form-login">
         <div>
           <div className="spaced-block">
             <Select
@@ -115,7 +115,7 @@ class LoginForm extends React.Component<Props, State> {
         <div>
           <output className="highlight">{this.state.resultLog}</output>
         </div>
-      </form>
+      </div>
     );
   }
 }
