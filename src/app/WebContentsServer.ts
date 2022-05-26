@@ -1,5 +1,4 @@
 import Path from 'path';
-import Fs from 'fs';
 import Express from 'express';
 // TODO: move to devDependencies (maybe impossible)
 import WebpackDevMiddleware, { OutputFileSystem } from 'webpack-dev-middleware';
@@ -9,6 +8,7 @@ import * as webpackConfig from '../../webpack.config.js';
 import webpack from 'webpack';
 
 const webDirName = Path.resolve(__dirname + '/../web');
+const bundleDirName = Path.resolve(__dirname + '/../../bundle');
 
 interface WebContentsServer {
   middlewares: () => Array<Express.RequestHandler>;
@@ -43,7 +43,7 @@ export class WebContentsServerDevImpl implements WebContentsServer {
     next: Express.NextFunction
   ): void {
     if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(webDirName + '/auth-portal-react/loggedin.html');
+      res.sendFile(webDirName + '/html/loggedin.html');
     } else {
       next();
     }
@@ -54,7 +54,7 @@ export class WebContentsServerDevImpl implements WebContentsServer {
     next: Express.NextFunction
   ): void {
     if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(webDirName + '/auth-portal-react/login.html');
+      res.sendFile(webDirName + '/html/login.html');
     } else {
       next();
     }
@@ -74,13 +74,9 @@ export class WebContentsServerImpl implements WebContentsServer {
     next: Express.NextFunction
   ): void {
     if (req.path.startsWith('/auth-portal/bundle/')) {
-      // Express.static(webDirName + '/')(req, res, next);
-      // TODO: bad workaround
-      res.sendFile(
-        webDirName + '/auth-portal-react/bundle/' + Path.basename(req.path)
-      );
+      Express.static(bundleDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(webDirName + '/auth-portal-react/loggedin.html');
+      res.sendFile(webDirName + '/html/loggedin.html');
     } else {
       next();
     }
@@ -92,13 +88,9 @@ export class WebContentsServerImpl implements WebContentsServer {
   ): void {
     // TODO: fix visibility
     if (req.path.startsWith('/auth-portal/bundle/')) {
-      // Express.static(webDirName + '/')(req, res, next);
-      // TODO: bad workaround
-      res.sendFile(
-        webDirName + '/auth-portal-react/bundle/' + Path.basename(req.path)
-      );
+      Express.static(bundleDirName + '/')(req, res, next);
     } else if (req.path === '/auth-portal' || req.path === '/auth-portal/') {
-      res.sendFile(webDirName + '/auth-portal-react/login.html');
+      res.sendFile(webDirName + '/html/login.html');
     } else {
       next();
     }

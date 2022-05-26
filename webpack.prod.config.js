@@ -8,4 +8,5 @@ module.exports = merge(common, {
     'login-react': [__dirname + '/src/web/react/login.tsx'],
     'loggedin-react': [__dirname + '/src/web/react/loggedin.tsx'],
   },
+  // TODO: /__webpack_hmr stil run
 });

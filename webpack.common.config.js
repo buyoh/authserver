@@ -7,7 +7,7 @@ module.exports = {
   //   // depend on mode
   // },
   output: {
-    path: __dirname + '/src/web/auth-portal-react/bundle',
+    path: __dirname + '/bundle/auth-portal/bundle',
     publicPath: '/auth-portal/bundle',
     filename: '[name].js',
   },
