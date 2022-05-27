@@ -1,0 +1,51 @@
+name: lint
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        node: [14, 16]
+
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node }}
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Please tell me who you are.
+      run: |
+        git config --global user.email "mai@ukibune.net"
+        git config --global user.name "mai bot-worker"
+    - name: get git submodules
+      run: |
+        git submodule init
+        git submodule update
+    - name: install packages
+      run: |
+        yarn
+    - name: lint javascript
+      run: |
+        yarn lint-fix
+    - name: commit phase
+      run: |
+        if [ `git diff | wc -l` -ne 0 ] ; then
+        echo detect diff
+        git add .
+        git commit -m 'lint-fix by Github Actions'
+        fi
+    - name: push
+      run: |
+        git push origin || : # tag checkout 時に detached となり失敗する為

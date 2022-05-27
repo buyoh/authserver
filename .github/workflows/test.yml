@@ -1,0 +1,38 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        node: [14, 16]
+
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node }}
+    - name: get git submodules
+      run: |
+        git submodule init
+        git submodule update
+    - name: install packages
+      run: |
+        yarn
+    - name: test javascript
+      run: |
+        yarn test
+    - name: try building javascript
+      run: |
+        yarn build
