@@ -219,6 +219,8 @@ describe('AppHandler', () => {
     const res = await handler.login(session, request);
 
     expect(res.response.ok).toBeFalsy();
+    if (res.response.ok === true) return;
+    expect(res.response.result).toBeTruthy();
   });
 
   it('call testUser, authorize member, fail', async () => {
@@ -234,6 +236,8 @@ describe('AppHandler', () => {
     const res = await handler.login(session, request);
 
     expect(res.response.ok).toBeFalsy();
+    if (res.response.ok === true) return;
+    expect(res.response.result).toBeTruthy();
   });
 
   it('call testUser, authorize unknown user, fail', async () => {
@@ -249,6 +253,8 @@ describe('AppHandler', () => {
     const res = await handler.login(session, request);
 
     expect(res.response.ok).toBeFalsy();
+    if (res.response.ok === true) return;
+    expect(res.response.result).toBeTruthy();
   });
 
   it('check permission, immutable commands', async () => {
@@ -258,8 +264,13 @@ describe('AppHandler', () => {
     async function checkForbidden(session: AppUserSession) {
       const res1 = await handler.getUser(session, { username: 'member' });
       expect(res1.ok).toBeFalsy();
+      if (res1.ok === true) return;
+      expect(res1.result).toBeTruthy();
+
       const res2 = await handler.getUsers(session);
       expect(res2.ok).toBeFalsy();
+      if (res2.ok === true) return;
+      expect(res2.result).toBeTruthy();
     }
     async function checkSuccessful(session: AppUserSession) {
       const res1 = await handler.getUser(session, { username: 'member' });
@@ -308,6 +319,7 @@ describe('AppHandler', () => {
     const res1 = await handler.login(session, request1);
     expect(res1.response.ok).toBeFalsy();
     if (res1.response.ok === true) return;
+    expect(res1.response.result).toBeTruthy();
     session = res1.session;
 
     await checkForbidden(session);
@@ -345,6 +357,9 @@ describe('AppHandler', () => {
           ) {
             const res1 = await handler.deleteUser(session, { username: 'new' });
             expect(res1.ok).toBeFalsy();
+            if (res1.ok === true) return;
+            expect(res1.result).toBeTruthy();
+
             const res2 = await handler.createUser(session, {
               username: 'new',
               level,
@@ -352,6 +367,9 @@ describe('AppHandler', () => {
               generated: { pass: 'passphrase' },
             });
             expect(res2.ok).toBeFalsy();
+            if (res2.ok === true) return;
+            expect(res2.result).toBeTruthy();
+
             const s2 = { ...kInvalidAppUserSession };
             const res3 = await handler.login(s2, {
               username: 'new',
@@ -359,6 +377,8 @@ describe('AppHandler', () => {
               generated: { pass: 'passphrase' },
             });
             expect(res3.response.ok).toBeFalsy();
+            if (res3.response.ok === true) return;
+            expect(res3.response.result).toBeTruthy();
           }
 
           async function checkSuccessful(
@@ -367,6 +387,8 @@ describe('AppHandler', () => {
           ) {
             const res1 = await handler.deleteUser(session, { username: 'new' });
             expect(res1.ok).toBeFalsy();
+            if (res1.ok === true) return;
+            expect(res1.result).toBeTruthy();
 
             const res2 = await handler.createUser(session, {
               username: 'new',

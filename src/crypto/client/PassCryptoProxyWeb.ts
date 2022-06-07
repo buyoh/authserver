@@ -24,6 +24,7 @@ export class PassCryptoClientProxy implements PassCryptoClient {
       this.crypto = SimplePassCryptoClientImpl;
     } else {
       console.error('Internal Error: unknown crypto name:', cryptoName);
+      throw new Error('Internal Error: unknown crypto name: ' + cryptoName);
     }
   }
   cryptoName = '';
