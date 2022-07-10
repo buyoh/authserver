@@ -10,7 +10,7 @@ an authentication server for subrequest-authentication
 - アカウントの管理
 - 簡易な web インターフェース
 
-## with nginx
+### combination with nginx
 
 https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subrequest-authentication/
 
@@ -20,26 +20,22 @@ https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subreques
 ## launch with docker-compose and docker (sample implementation)
 
 ```sh
+yarn build
 cd docker-compose/nginx-sample
 docker-compose up
 ```
 
-cleanup
+Then, access http://app.localhost:4000 .
+
+To cleanup the docker instance:
 
 ```sh
 docker-compose down --rmi all --volumes --remove-orphans
 ```
 
-## testing (docker-compose/nginx-sample)
+We can check belows how authserver works:
 
-TODO: FIXME: obsolated!!!
-
-```sh
-cd docker-compose/nginx-sample
-docker-compose up
-```
-
-login username: `root`, password: `pass`
+- login username: `root`, password: `pass`
 
 - access `app.localhost:4000` (ok)
 - access `one.app.localhost:4000` (ok)

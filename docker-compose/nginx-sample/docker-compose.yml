@@ -27,11 +27,15 @@ services:
     volumes:
       - npm_package:/opt/app/node_modules
       - ../../src:/opt/app/src
+      - ../../bundle:/opt/app/bundle
       - ../../package.json:/opt/app/package.json
       - ../../yarn.lock:/opt/app/yarn.lock
       - ../../webpack.config.js:/opt/app/webpack.config.js
-      - ../../webpack.common.config.js:/opt/app/webpack.common.config.js
+      - ../../tsconfig.json:/opt/app/tsconfig.json
+      - ../../tsconfig.server.json:/opt/app/tsconfig.server.json
       - ../../tsconfig.webpack.json:/opt/app/tsconfig.webpack.json
+      - ../../webpack.common.config.js:/opt/app/webpack.common.config.js
+      - ../../webpack.prod.config.js:/opt/app/webpack.prod.config.js
 
   nginx:
     image: nginx
